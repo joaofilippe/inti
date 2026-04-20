@@ -1,0 +1,3 @@
+ALTER TABLE atos DROP COLUMN nome_ato;
+ALTER TABLE atos ADD COLUMN tipo_ato_codigo INT NOT NULL DEFAULT 1 REFERENCES tipos_ato(codigo);
+ALTER TABLE atos ALTER COLUMN tipo_ato_codigo DROP DEFAULT;

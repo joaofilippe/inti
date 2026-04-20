@@ -1,0 +1,1 @@
+ALTER TABLE mandados DROP COLUMN IF EXISTS lote;

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Mandados | Oficial de Justiça</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="form.css?v=6">
+</head>
+<body>
+
+    <div class="container-fluid">
+        <div class="glass-panel">
+            <div class="header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h1>Painel de Registro de Diligências</h1>
+                    <p>Preencha os dados do mandado pelo sistema web descentralizado.</p>
+                </div>
+                <!-- Botão de Upload -->
+                <div class="upload-container" style="text-align: right;">
+                    <input type="file" id="mandado-upload" accept="image/*,application/pdf" style="display: none;">
+                    <label for="mandado-upload" class="btn-importar" style="display: inline-block; padding: 0.8rem 1.5rem; background: rgba(79, 70, 229, 0.2); border: 1px solid var(--primary-color); border-radius: 8px; color: #fff; cursor: pointer; transition: all 0.3s; font-weight: 500;">
+                        <span class="icon">📄</span> Importar Mandado (PDF/Img)
+                    </label>
+                    <div id="upload-status" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);"></div>
+                    <div class="lote-upload-wrapper">
+                        <input type="file" id="lote-upload" accept="application/pdf" style="display: none;">
+                        <label for="lote-upload" class="lote-upload-label">
+                            <span>📦</span> Importar Lote (PDF)
+                        </label>
+                        <div id="lote-status" class="lote-upload-status"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====== FILA DE LOTE ====== -->
+            <div id="lote-fila" class="lote-fila">
+                <div class="lote-fila-titulo">
+                    <span>📦 <strong id="lote-total">0</strong> mandado(s) carregado(s) — clique para revisar:</span>
+                    <button type="button" id="btn-lote-limpar" class="btn-lote-limpar">Limpar</button>
+                </div>
+                <div id="lote-lista" class="lote-lista"></div>
+            </div>
+
+            <form id="mandadoForm" class="form-layout">
+                
+                <!-- ====== PASSO 1: DADOS PRINCIPAIS DO MANDADO ====== -->
+                <div id="step-1" class="step active">
+                    <h3 class="section-title">Dados Gerais do Mandado</h3>
+                    
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label for="mandado-id">ID do Mandado</label>
+                            <input type="text" id="mandado-id" placeholder="Ex: 0001234-56" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="situacao" id="lbl-situacao">Situação</label>
+                            <input type="number" id="situacao" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="data-carga">Data da Carga</label>
+                            <input type="text" id="data-carga" placeholder="Ex: 15/05">
+                        </div>
+                    </div>
+
+                    <!-- Bloco Dinâmico de Atos -->
+                    <div class="field-group active dil-box">
+                        <h4 class="dil-title">Atos Realizados</h4>
+                        <div id="atos-container">
+                            <div class="ato-row grid-5 dil-row">
+                                <div class="form-group mb-0 grid-col-span-2">
+                                    <label>Ato Realizado</label>
+                                    <input type="text" class="ato-nome" placeholder="Ex: Citação, Intimação" required>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label>Data</label>
+                                    <input type="text" class="ato-data" placeholder="DD/MM" maxlength="10" required>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label>Hora</label>
+                                    <input type="text" class="ato-hora" placeholder="HH:MM" maxlength="5">
+                                </div>
+                                <div class="form-group mb-0 pb-0-2">
+                                    <button type="button" class="btn-remove-ato btn-remove" title="Remover">X</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" id="btn-add-ato" class="btn-secondary btn-add-row"><span>+</span> Novo Ato</button>
+                    </div>
+
+                    <!-- Bloco Dinâmico de Diligencias -->
+                    <div class="field-group active dil-box">
+                        <h4 class="dil-title">Diligências Realizadas</h4>
+                        <div id="diligencias-container">
+                            <div class="diligencia-row grid-3 dil-row">
+                                <div class="form-group mb-0">
+                                    <label>Data</label>
+                                    <input type="text" class="dil-data" placeholder="DD/MM" maxlength="10">
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label>Hora</label>
+                                    <input type="text" class="dil-hora" placeholder="HH:MM" maxlength="5">
+                                </div>
+                                <div class="form-group mb-0 pb-0-2">
+                                    <button type="button" class="btn-remove-dil btn-remove" title="Remover">X</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" id="btn-add-dil" class="btn-secondary btn-add-row"><span>+</span> Nova Diligência</button>
+                    </div>
+
+
+
+                    <div class="grid-3">
+                        <div class="form-group grid-col-span-2">
+                            <label for="nome-alvo">Nome da Parte</label>
+                            <div class="relative-flex-center">
+                                <input type="text" id="nome-alvo" class="input-nome-alvo" placeholder="Ex: Empresa X Ltda">
+                                <label class="label-is-pj">
+                                    <input type="checkbox" id="is-pj" class="checkbox-primary m-0"> PJ?
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="documento" id="lbl-documento">Documento (CPF)</label>
+                            <input type="text" id="documento" placeholder="Apenas números...">
+                        </div>
+                    </div>
+
+                    <div class="grid-4">
+                        <div class="form-group grid-col-span-2">
+                            <label>Gênero (Artigo)</label>
+                            <div class="genero-container">
+                                <label class="genero-label">
+                                    <input type="radio" name="sexo" value="M" checked class="radio-primary"> Masculino
+                                </label>
+                                <label class="genero-label">
+                                    <input type="radio" name="sexo" value="F" class="radio-primary"> Feminino
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group grid-col-span-2">
+                            <label for="posicao">Posição da Parte</label>
+                            <input type="text" id="posicao" placeholder="Ex: Autor, Vítima">
+                        </div>
+                    </div>
+
+                    <!-- Bloco Dinâmico do Representante (PJ) -->
+                    <div id="bloco-representante" class="grid-3 bloco-rep">
+                        <div class="form-group grid-col-span-2 mb-0">
+                            <label for="rep-nome" class="label-muted">Nome do Representante Legal (Diretor/Sócio/Gerente)</label>
+                            <input type="text" id="rep-nome" placeholder="Ex: Carlos Silva">
+                        </div>
+                        <div class="form-group mb-0">
+                            <label for="rep-doc" class="label-muted">Documento do Rep. (CPF)</label>
+                            <input type="text" id="rep-doc" placeholder="Apenas números...">
+                        </div>
+                    </div>
+
+                    <div class="grid-3">
+                        <div class="form-group grid-col-span-2">
+                            <label for="endereco">Endereço Completo</label>
+                            <input type="text" id="endereco" placeholder="Ex: Rua X, Y - Apto 33">
+                        </div>
+                        <div class="form-group">
+                            <label for="cidade">Cidade</label>
+                            <input type="text" id="cidade" placeholder="Ex: Olímpia">
+                        </div>
+                    </div>
+
+                    <!-- Bloco Dinâmico de Contatos -->
+                    <div class="field-group active contatos-box">
+                        <h4 class="dil-title">Lista de Contatos</h4>
+                        
+                        <div id="contatos-container">
+                            <div class="contato-row contato-row-style">
+                                <div class="grid-3 aligns-end">
+                                    <div class="form-group mb-0">
+                                        <label>Tipo de Contato</label>
+                                        <select class="tipo-contato-select">
+                                            <option value="TELEFONE">Telefone/Celular</option>
+                                            <option value="WHATSAPP">WhatsApp</option>
+                                            <option value="EMAIL">E-mail</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group mb-0">
+                                        <label>Valor do Contato</label>
+                                        <input type="tel" class="contato-valor" placeholder="Ex: (11) 99999-9999">
+                                    </div>
+                                    <div class="form-group mb-0 flex-between">
+                                        <label class="terceiro-check-label">
+                                            <input type="checkbox" class="is-terceiro-check checkbox-primary">
+                                            <span class="terceiro-span">Terceiro?</span>
+                                        </label>
+                                        <button type="button" class="btn-remove-contato btn-remove-tall" title="Remover este contato">X</button>
+                                    </div>
+                                </div>
+                                <div class="bloco-terceiro grid-3 bloco-terceiro-style">
+                                    <div class="form-group mb-0">
+                                        <!-- Espaço Vazio Intencional -->
+                                    </div>
+                                    <div class="form-group mb-0">
+                                        <label class="label-muted">Relação / Vínculo</label>
+                                        <input type="text" class="terceiro-relacao" placeholder="Ex: Mãe, Vizinho">
+                                    </div>
+                                    <div class="form-group mb-0">
+                                        <label class="label-muted">Nome do Terceiro</label>
+                                        <input type="text" class="terceiro-nome" placeholder="Ex: Dona Maria">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" id="btn-add-contato" class="btn-secondary btn-add-row"><span>+</span> Adicionar novo contato</button>
+                    </div>
+
+                    <div class="form-group mt-1-5">
+                        <label for="obs-mandado">Observações Adicionais</label>
+                        <input type="text" id="obs-mandado" placeholder="Anotações gerais a levar a termo...">
+                    </div>
+
+                    <div class="button-container">
+                        <button type="button" class="btn-primary" id="btn-save">Aguardando Situação...</button>
+                        <button type="button" class="btn-secondary" id="btn-proximo">Próximo →</button>
+                    </div>
+                </div>
+
+            </form>
+
+            <pre id="jsonResult" class="resultbox"></pre>
+
+
+        </div>
+    </div>
+
+    <script src="form.js?v=6"></script>
+</body>
+</html>

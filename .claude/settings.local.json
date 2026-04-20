@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go get:*)",
+      "Bash(go build:*)",
+      "Bash(go doc:*)",
+      "Bash(powershell -Command \":*)",
+      "Bash(go mod:*)",
+      "Bash(rm internal/infra/infra.go)",
+      "Bash(mv internal/cache internal/infra/cache)",
+      "Bash(mv internal/database internal/infra/database)",
+      "Bash(mv internal/server internal/infra/server)",
+      "Bash(mv internal/repository internal/infra/repository)",
+      "Bash(go version:*)",
+      "Bash(find . -name \"*.go\" -exec sed -i 's|\"github.com/joaofilippe/inti/internal/dto\"|\"github.com/joaofilippe/inti/internal/api/dto\"|g' {} +)",
+      "Bash(mv internal/service internal/infra/service)",
+      "Bash(find . -name \"*.go\" -exec sed -i 's|\"github.com/joaofilippe/inti/internal/repository\"|\"github.com/joaofilippe/inti/internal/infra/repository\"|g; s|\"github.com/joaofilippe/inti/internal/service\"|\"github.com/joaofilippe/inti/internal/infra/service\"|g' {} +)",
+      "Bash(dlv version:*)",
+      "Bash(go install:*)",
+      "Bash(docker compose:*)",
+      "Bash(swag init:*)",
+      "Bash(~/go/bin/swag init:*)",
+      "Read(//c/tmp/**)",
+      "Bash(unzip -q /c/projects/go/inti/2INT.docx -d 2INT_extracted)",
+      "Bash(unzip -q /c/projects/go/inti/3NEG.docx -d 3NEG_extracted)",
+      "Bash(ls -la /c/projects/go/inti/*.docx)",
+      "Bash(xargs cat:*)",
+      "Bash(xargs ls:*)",
+      "Bash(cat)",
+      "Bash(chmod +x /tmp/parse_atos.sh)",
+      "Bash(/tmp/parse_atos.sh)",
+      "Bash(awk '-F'\\\\''' '{for\\(i=1;i<=NF;i++\\) print \"Field \"i\": \" $i}')",
+      "Bash(xargs grep *)"
+    ]
+  }
+}

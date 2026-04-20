@@ -1,0 +1,523 @@
+/* Variáveis de Cor */
+:root {
+    --primary-color: #4F46E5;
+    --primary-hover: #4338CA;
+    --success-color: #10b981;
+    --error-color: #ef4444;
+    --bg-color: #0f172a;
+    --surface-color: rgba(30, 41, 59, 0.7);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+body {
+    background: var(--bg-color);
+    background-image: radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
+                      radial-gradient(at 100% 100%, rgba(56, 189, 248, 0.15) 0px, transparent 50%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-primary);
+    /* Remove padding para permitir que os elementos preencham 100% da tela */
+    padding: 0; 
+}
+
+/* Ocupando 100% do layout 16:9 vertical e horizontalmente */
+.container-fluid { 
+    width: 100vw; 
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.glass-panel {
+    flex: 1; /* Preenche o tamanho completo no eixo flex vertical */
+    background: var(--surface-color);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: none;
+    border-radius: 0; /* Tiramos as bordas redondas para ficar "Flat" em toda tela */
+    /* Padding lateral maior para dar um respiro no wide-screen */
+    padding: 2rem; 
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header para layout Full-Screen (mais puxado a esquerda e não centro) */
+.header { margin-bottom: 3rem; text-align: left; }
+.header h1 {
+    font-size: 1.5rem; font-weight: 700; margin-bottom: 0.025rem;
+    background: linear-gradient(135deg, #fff, #94a3b8);
+    background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.header p { color: var(--text-secondary); font-size: 1rem; }
+
+/* Steps */
+.step {
+    display: none;
+    animation: fadeIn 0.4s ease;
+    flex: 1;
+}
+
+.step.active {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Toggle buttons - Controlando tamanho máximo para não esticar pela tela inteira */
+.resultado-toggle {
+    display: flex; gap: 1rem; margin-bottom: 2rem; max-width: 450px;
+}
+.radio-btn { flex: 1; position: relative; }
+.radio-btn input { position: absolute; opacity: 0; cursor: pointer; }
+.radio-btn label {
+    display: block; width: 100%; text-align: center;
+    padding: 1rem; border-radius: 12px;
+    background: rgba(15, 23, 42, 0.5);
+    border: 2px solid var(--border-color);
+    color: var(--text-secondary);
+    font-weight: 600; cursor: pointer;
+    transition: all 0.3s ease;
+}
+.radio-btn input:checked + label[for="opt-positivo"] {
+    background: rgba(16, 185, 129, 0.15); border-color: var(--success-color); color: var(--success-color);
+}
+.radio-btn input:checked + label[for="opt-negativo"] {
+    background: rgba(239, 68, 68, 0.15); border-color: var(--error-color); color: var(--error-color);
+}
+
+/* List / Radio Boxes */
+.list-selection {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 2rem;
+}
+.list-selection label {
+    display: flex; align-items: center; padding: 1.25rem;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--border-color);
+    border-radius: 10px; cursor: pointer;
+    transition: all 0.2s ease;
+}
+.list-selection label:hover {
+    background: rgba(15, 23, 42, 0.8); border-color: var(--primary-color);
+}
+.list-selection input[type="radio"] {
+    margin-right: 1rem; width: 1.25rem; height: 1.25rem;
+    accent-color: var(--primary-color);
+}
+.list-selection input[type="radio"]:checked + span {
+    color: #fff; font-weight: 600;
+}
+.list-selection label:has(input:checked) {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 10px rgba(79, 70, 229, 0.2);
+}
+
+/* Formulário Grids Flexíveis para Monitores Wide (16:9) */
+.form-group { margin-bottom: 1.5rem; }
+.form-group > label {
+    display: block; font-size: 0.95rem; font-weight: 500;
+    margin-bottom: 0.5rem; color: #cbd5e1;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.grid-4 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.grid-5 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+}
+
+input:not([type="radio"]), select, textarea {
+    width: 100%; padding: 0.875rem 1rem;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--border-color);
+    border-radius: 10px; color: var(--text-primary);
+    font-size: 1rem; transition: all 0.3s ease;
+}
+
+input:not([type="radio"]):focus, select:focus, textarea:focus {
+    outline: none; border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    background: rgba(15, 23, 42, 0.8);
+}
+
+textarea { resize: vertical; min-height: 120px; }
+
+.section-title {
+    margin: 0 0 2rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);
+    font-size: 1.3rem; color: #fff; font-weight: 600;
+}
+
+.field-group {
+    display: none; opacity: 0; transform: translateY(-10px);
+    transition: all 0.3s ease; margin-top: 1rem;
+}
+.field-group.active { display: block; opacity: 1; transform: translateY(0); }
+
+/* Botoes */
+.button-container {
+    display: flex; justify-content: flex-end; gap: 1rem; margin-top: auto; padding-top: 2rem;
+}
+
+button {
+    padding: 1.25rem 3rem; border: none; border-radius: 10px;
+    font-size: 1.1rem; font-weight: 600; cursor: pointer;
+    transition: all 0.3s ease; min-width: 250px;
+}
+
+.btn-primary {
+    background: var(--primary-color); color: white;
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+}
+.btn-primary:hover {
+    background: var(--primary-hover); transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4);
+}
+
+.btn-secondary {
+    background: transparent; border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+.btn-secondary:hover { background: rgba(255, 255, 255, 0.1); border-color: #fff; }
+
+#btn-proximo { display: none; }
+
+.resultbox {
+    margin-top: 2rem; background: rgba(0,0,0,0.5);
+    padding: 1.5rem; border-radius: 10px; font-family: monospace;
+    font-size: 0.9rem; color: #10b981; display: none;
+    border: 1px solid var(--border-color); white-space: pre-wrap;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* Classes extras refatoradas (Retirando inline styles) */
+
+.form-layout {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.dil-box, .contatos-box {
+    margin-bottom: 1.5rem;
+    background: rgba(15, 23, 42, 0.3);
+    padding: 1.5rem;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.contatos-box {
+    margin-bottom: 0;
+    margin-top: 1.5rem;
+}
+
+.dil-title {
+    margin-bottom: 1rem;
+    color: #cbd5e1;
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+.dil-row {
+    align-items: end;
+    margin-bottom: 0.5rem;
+    background: rgba(15, 23, 42, 0.2);
+    padding: 0.8rem;
+    border-radius: 8px;
+}
+
+.mb-0 { margin-bottom: 0 !important; }
+.mb-1-5 { margin-bottom: 1.5rem !important; }
+.mt-1-5 { margin-top: 1.5rem !important; }
+.pb-0-2 { padding-bottom: 0.2rem !important; }
+.m-0 { margin: 0 !important; }
+
+.btn-remove {
+    padding: 0.5rem 1rem;
+    background: var(--error-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    display: none;
+}
+
+.btn-add-row {
+    margin-top: 1rem;
+    padding: 0.6rem 1.5rem;
+    min-width: auto;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.grid-col-span-2 {
+    grid-column: span 2;
+}
+
+.relative-flex-center {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-nome-alvo {
+    padding-right: 65px;
+    width: 100%;
+}
+
+.label-is-pj {
+    position: absolute;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    user-select: none;
+    color: #94a3b8;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.checkbox-primary {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-color);
+}
+
+.radio-primary {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-color);
+}
+
+.genero-container {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    padding: 0.875rem 0;
+}
+
+.genero-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    color: #f8fafc;
+    font-weight: 500;
+    user-select: none;
+}
+
+.bloco-rep {
+    display: none;
+    background: rgba(15, 23, 42, 0.4);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px dashed var(--border-color);
+    margin-bottom: 1.5rem;
+}
+
+.label-muted {
+    color: #94a3b8;
+}
+
+.contato-row-style {
+    background: rgba(15, 23, 42, 0.2);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.aligns-end {
+    align-items: end;
+}
+
+.flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 0.8rem;
+}
+
+.terceiro-check-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+    width: fit-content;
+}
+
+.terceiro-span {
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: #cbd5e1;
+}
+
+.btn-remove-tall {
+    padding: 0 1rem;
+    height: 100%;
+    min-width: auto;
+    background: var(--error-color);
+    display: none;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.bloco-terceiro-style {
+    display: none;
+    align-items: end;
+    margin-top: 1rem;
+}
+
+/* ==============================
+   Importação em Lote
+   ============================== */
+
+.lote-upload-label {
+    display: inline-block;
+    padding: 0.8rem 1.5rem;
+    background: rgba(79, 70, 229, 0.2);
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+.lote-upload-label:hover { background: rgba(79, 70, 229, 0.35); }
+
+.lote-upload-wrapper { margin-top: 0.75rem; }
+.lote-upload-status { margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary); }
+
+/* Fila de revisão de lote */
+.lote-fila {
+    display: none;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    animation: fadeIn 0.3s ease;
+}
+.lote-fila.active { display: block; }
+
+.lote-fila-titulo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.lote-lista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.lote-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.6rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.82rem;
+    min-width: 160px;
+    transition: all 0.2s;
+    text-align: left;
+}
+.lote-item:hover {
+    background: rgba(79, 70, 229, 0.15);
+    border-color: var(--primary-color);
+    transform: none;
+}
+.lote-item.ativo {
+    background: rgba(79, 70, 229, 0.25);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 8px rgba(79, 70, 229, 0.3);
+}
+.lote-item.concluido {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: var(--success-color);
+}
+
+.lote-item-num {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+}
+.lote-item.ativo .lote-item-num { color: #a5b4fc; }
+.lote-item.concluido .lote-item-num { color: var(--success-color); }
+
+.lote-item-id {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    display: block;
+    margin-top: 0.1rem;
+}
+.lote-item-nome {
+    font-size: 0.82rem;
+    color: #cbd5e1;
+    display: block;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.btn-lote-limpar {
+    padding: 0.3rem 0.8rem;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 500;
+    min-width: auto;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-lote-limpar:hover {
+    border-color: var(--error-color);
+    color: var(--error-color);
+    transform: none;
+    box-shadow: none;
+}

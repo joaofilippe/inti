@@ -1,0 +1,344 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API para geração e extração de mandados judiciais.",
+        "title": "Inti API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/api/batch/extract": {
+            "post": {
+                "description": "Recebe um arquivo PDF com múltiplos mandados e extrai os dados de cada um usando IA (Gemini).",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "extração"
+                ],
+                "summary": "Extrai lote de mandados",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Arquivo PDF com múltiplos mandados",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de mandados extraídos",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.MandadoExtraido"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Arquivo inválido ou não enviado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/batch/mandados": {
+            "post": {
+                "description": "Recebe uma lista de mandados e retorna um arquivo ZIP contendo os documentos DOCX gerados.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/zip"
+                ],
+                "tags": [
+                    "mandados"
+                ],
+                "summary": "Gera lote de mandados",
+                "parameters": [
+                    {
+                        "description": "Lista de mandados",
+                        "name": "mandados",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.MandadoPositivoDTO"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Arquivo ZIP com os mandados",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Payload inválido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/extract": {
+            "post": {
+                "description": "Recebe um arquivo PDF e extrai os dados do mandado usando IA (Gemini).",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "extração"
+                ],
+                "summary": "Extrai mandado",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Arquivo PDF do mandado",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dados extraídos do mandado",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MandadoExtraido"
+                        }
+                    },
+                    "400": {
+                        "description": "Arquivo inválido ou não enviado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/mandados": {
+            "post": {
+                "description": "Recebe os dados de um mandado e retorna o documento DOCX gerado.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                ],
+                "tags": [
+                    "mandados"
+                ],
+                "summary": "Gera mandado",
+                "parameters": [
+                    {
+                        "description": "Dados do mandado",
+                        "name": "mandado",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.MandadoPositivoDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Arquivo DOCX do mandado",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Payload inválido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "dto.AtoDTO": {
+            "type": "object",
+            "properties": {
+                "DataCumprimento": {
+                    "type": "string"
+                },
+                "Horario": {
+                    "type": "string"
+                },
+                "NomeAto": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ContatoDTO": {
+            "type": "object",
+            "properties": {
+                "IsTerceiro": {
+                    "type": "boolean"
+                },
+                "NomeTerceiro": {
+                    "type": "string"
+                },
+                "RelacaoTerceiro": {
+                    "type": "string"
+                },
+                "Tipo": {
+                    "type": "string"
+                },
+                "Valor": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.MandadoExtraido": {
+            "type": "object",
+            "properties": {
+                "Cidade": {
+                    "type": "string"
+                },
+                "Documento": {
+                    "type": "string"
+                },
+                "Endereco": {
+                    "type": "string"
+                },
+                "Mandado": {
+                    "type": "string"
+                },
+                "Nome": {
+                    "type": "string"
+                },
+                "Posicao": {
+                    "type": "string"
+                },
+                "Sexo": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.MandadoPositivoDTO": {
+            "type": "object",
+            "properties": {
+                "Atos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.AtoDTO"
+                    }
+                },
+                "Cidade": {
+                    "type": "string"
+                },
+                "Contato": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ContatoDTO"
+                    }
+                },
+                "DataCarga": {
+                    "type": "string"
+                },
+                "Diligencias": {
+                    "type": "string"
+                },
+                "Documento": {
+                    "type": "string"
+                },
+                "Endereco": {
+                    "type": "string"
+                },
+                "IsPJ": {
+                    "type": "boolean"
+                },
+                "Mandado": {
+                    "type": "string"
+                },
+                "Nome": {
+                    "type": "string"
+                },
+                "Obs": {
+                    "type": "string"
+                },
+                "Posicao": {
+                    "type": "string"
+                },
+                "RepresentanteDoc": {
+                    "type": "string"
+                },
+                "RepresentanteNome": {
+                    "type": "string"
+                },
+                "Sexo": {
+                    "type": "string"
+                },
+                "Situacao": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

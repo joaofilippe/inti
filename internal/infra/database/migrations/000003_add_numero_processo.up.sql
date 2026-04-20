@@ -1,0 +1,1 @@
+ALTER TABLE mandados ADD COLUMN IF NOT EXISTS numero_processo VARCHAR(100);

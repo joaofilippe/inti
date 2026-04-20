@@ -1,0 +1,228 @@
+basePath: /
+definitions:
+  dto.AtoDTO:
+    properties:
+      DataCumprimento:
+        type: string
+      Horario:
+        type: string
+      NomeAto:
+        type: string
+    type: object
+  dto.ContatoDTO:
+    properties:
+      IsTerceiro:
+        type: boolean
+      NomeTerceiro:
+        type: string
+      RelacaoTerceiro:
+        type: string
+      Tipo:
+        type: string
+      Valor:
+        type: string
+    type: object
+  dto.MandadoExtraido:
+    properties:
+      Cidade:
+        type: string
+      Documento:
+        type: string
+      Endereco:
+        type: string
+      Mandado:
+        type: string
+      Nome:
+        type: string
+      Posicao:
+        type: string
+      Sexo:
+        type: string
+    type: object
+  dto.MandadoPositivoDTO:
+    properties:
+      Atos:
+        items:
+          $ref: '#/definitions/dto.AtoDTO'
+        type: array
+      Cidade:
+        type: string
+      Contato:
+        items:
+          $ref: '#/definitions/dto.ContatoDTO'
+        type: array
+      DataCarga:
+        type: string
+      Diligencias:
+        type: string
+      Documento:
+        type: string
+      Endereco:
+        type: string
+      IsPJ:
+        type: boolean
+      Mandado:
+        type: string
+      Nome:
+        type: string
+      Obs:
+        type: string
+      Posicao:
+        type: string
+      RepresentanteDoc:
+        type: string
+      RepresentanteNome:
+        type: string
+      Sexo:
+        type: string
+      Situacao:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API para geração e extração de mandados judiciais.
+  title: Inti API
+  version: "1.0"
+paths:
+  /api/batch/extract:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Recebe um arquivo PDF com múltiplos mandados e extrai os dados
+        de cada um usando IA (Gemini).
+      parameters:
+      - description: Arquivo PDF com múltiplos mandados
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de mandados extraídos
+          schema:
+            items:
+              $ref: '#/definitions/dto.MandadoExtraido'
+            type: array
+        "400":
+          description: Arquivo inválido ou não enviado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erro interno
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Extrai lote de mandados
+      tags:
+      - extração
+  /api/batch/mandados:
+    post:
+      consumes:
+      - application/json
+      description: Recebe uma lista de mandados e retorna um arquivo ZIP contendo
+        os documentos DOCX gerados.
+      parameters:
+      - description: Lista de mandados
+        in: body
+        name: mandados
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/dto.MandadoPositivoDTO'
+          type: array
+      produces:
+      - application/zip
+      responses:
+        "200":
+          description: Arquivo ZIP com os mandados
+          schema:
+            type: file
+        "400":
+          description: Payload inválido
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erro interno
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Gera lote de mandados
+      tags:
+      - mandados
+  /api/extract:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Recebe um arquivo PDF e extrai os dados do mandado usando IA (Gemini).
+      parameters:
+      - description: Arquivo PDF do mandado
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Dados extraídos do mandado
+          schema:
+            $ref: '#/definitions/dto.MandadoExtraido'
+        "400":
+          description: Arquivo inválido ou não enviado
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erro interno
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Extrai mandado
+      tags:
+      - extração
+  /api/mandados:
+    post:
+      consumes:
+      - application/json
+      description: Recebe os dados de um mandado e retorna o documento DOCX gerado.
+      parameters:
+      - description: Dados do mandado
+        in: body
+        name: mandado
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MandadoPositivoDTO'
+      produces:
+      - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+      responses:
+        "200":
+          description: Arquivo DOCX do mandado
+          schema:
+            type: file
+        "400":
+          description: Payload inválido
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erro interno
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Gera mandado
+      tags:
+      - mandados
+swagger: "2.0"
