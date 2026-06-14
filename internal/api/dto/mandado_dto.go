@@ -1,11 +1,11 @@
 package dto
 
 type AtoDTO struct {
-	CodigoAto           int    `json:"CodigoAto"`
-	DataCumprimento     string `json:"DataCumprimento"`
-	Horario             string `json:"Horario"`
-	Realizado           *bool  `json:"Realizado,omitempty"`
-	MotivoNaoRealizacao string `json:"MotivoNaoRealizacao,omitempty"`
+	CodigoAto             int    `json:"CodigoAto"`
+	DataCumprimento       string `json:"DataCumprimento"`
+	Horario               string `json:"Horario"`
+	Realizado             *bool  `json:"Realizado,omitempty"`
+	MotivoNaoRealizacaoID *int   `json:"MotivoNaoRealizacaoId,omitempty"`
 }
 
 type MandadoPositivoDTO struct {
@@ -24,7 +24,8 @@ type MandadoPositivoDTO struct {
 	Nome              string       `json:"Nome"`
 	Sexo              string       `json:"Sexo"`
 	Posicao           string       `json:"Posicao"`
-	Documento         string       `json:"Documento"`
-	TipoDocumento     string       `json:"TipoDocumento"`
-	Obs               string       `json:"Obs"`
+	Documento             string       `json:"Documento"`
+	TipoDocumento         string       `json:"TipoDocumento"`
+	Obs                   string       `json:"Obs"`
+	MotivoNaoRealizacaoID *int         `json:"MotivoNaoRealizacaoId,omitempty"`
 }

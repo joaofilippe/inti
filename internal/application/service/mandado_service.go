@@ -11,10 +11,11 @@ import (
 
 type MandadoService struct {
 	tiposAto map[int]entities.TipoAto
+	motivos  map[int]entities.MotivoNaoRealizacao
 }
 
-func NewMandadoService(tiposAto map[int]entities.TipoAto) *MandadoService {
-	return &MandadoService{tiposAto: tiposAto}
+func NewMandadoService(tiposAto map[int]entities.TipoAto, motivos map[int]entities.MotivoNaoRealizacao) *MandadoService {
+	return &MandadoService{tiposAto: tiposAto, motivos: motivos}
 }
 
 // MapDTOToDomain converte o DTO recebido do frontend para o tipo de domínio.
@@ -22,11 +23,11 @@ func (s *MandadoService) MapDTOToDomain(p dto.MandadoPositivoDTO) entities.Manda
 	atos := make([]entities.Ato, len(p.Atos))
 	for i, a := range p.Atos {
 		atos[i] = entities.Ato{
-			CodigoAto:           a.CodigoAto,
-			DataCumprimento:     a.DataCumprimento,
-			Horario:             a.Horario,
-			Realizado:           a.Realizado,
-			MotivoNaoRealizacao: a.MotivoNaoRealizacao,
+			CodigoAto:             a.CodigoAto,
+			DataCumprimento:       a.DataCumprimento,
+			Horario:               a.Horario,
+			Realizado:             a.Realizado,
+			MotivoNaoRealizacaoID: a.MotivoNaoRealizacaoID,
 		}
 	}
 
@@ -55,11 +56,12 @@ func (s *MandadoService) MapDTOToDomain(p dto.MandadoPositivoDTO) entities.Manda
 		Nome:              normalizarMaiusculas(p.Nome),
 		Sexo:              p.Sexo,
 		Posicao:           p.Posicao,
-		Documento:         p.Documento,
-		TipoDocumento:     strings.ToUpper(p.TipoDocumento),
-		RepresentanteNome: p.RepresentanteNome,
-		RepresentanteDoc:  p.RepresentanteDoc,
-		Obs:               p.Obs,
+		Documento:             p.Documento,
+		TipoDocumento:         strings.ToUpper(p.TipoDocumento),
+		RepresentanteNome:     p.RepresentanteNome,
+		RepresentanteDoc:      p.RepresentanteDoc,
+		Obs:                   p.Obs,
+		MotivoNaoRealizacaoID: p.MotivoNaoRealizacaoID,
 	}
 }
 
@@ -122,10 +124,18 @@ func (s *MandadoService) BuildReplaces(m entities.Mandado) map[string]string {
 			if ato.Realizado != nil {
 				isRealizado = *ato.Realizado
 			}
+
+			var motivoStr string
+			if ato.MotivoNaoRealizacaoID != nil {
+				if mtv, ok := s.motivos[*ato.MotivoNaoRealizacaoID]; ok {
+					motivoStr = mtv.Explicacao
+				}
+			}
+
 			atosTextos = append(atosTextos, atoTexto{
 				positivo:  tipo.Positivo,
 				negativo:  tipo.Negativo,
-				motivo:    ato.MotivoNaoRealizacao,
+				motivo:    motivoStr,
 				realizado: isRealizado,
 			})
 		}
@@ -269,9 +279,15 @@ func documentoFormatado(tipo, numero string) string {
 		formatted = digits[:3] + "." + digits[3:6] + "." + digits[6:9] + "-" + digits[9:]
 	case len(digits) == 14: // CNPJ: 12.345.678/0001-90
 		formatted = digits[:2] + "." + digits[2:5] + "." + digits[5:8] + "/" + digits[8:12] + "-" + digits[12:]
-	case len(digits) >= 7 && len(digits) <= 9: // RG: 12.345.678-9
-		n := len(digits)
-		formatted = digits[:n-8] + "." + digits[n-8:n-5] + "." + digits[n-5:n-1] + "-" + digits[n-1:]
+	case len(digits) >= 7 && len(digits) <= 9: // RG
+		switch len(digits) {
+		case 9: // 12.345.678-9 (com dígito verificador)
+			formatted = digits[:2] + "." + digits[2:5] + "." + digits[5:8] + "-" + digits[8:]
+		case 8: // 12.345.678 (sem dígito verificador)
+			formatted = digits[:2] + "." + digits[2:5] + "." + digits[5:8]
+		case 7: // 1.234.456 (RG antigo)
+			formatted = digits[:1] + "." + digits[1:4] + "." + digits[4:7]
+		}
 	default:
 		formatted = numero
 	}

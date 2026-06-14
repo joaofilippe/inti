@@ -40,6 +40,16 @@ func (c *Cache) SetTiposAto(ctx context.Context, value string) error {
 	return c.client.Set(ctx, tiposAtoKey, value, 0).Err()
 }
 
+const motivosNaoRealizacaoKey = "motivos_nao_realizacao"
+
+func (c *Cache) GetMotivosNaoRealizacao(ctx context.Context) (string, error) {
+	return c.client.Get(ctx, motivosNaoRealizacaoKey).Result()
+}
+
+func (c *Cache) SetMotivosNaoRealizacao(ctx context.Context, value string) error {
+	return c.client.Set(ctx, motivosNaoRealizacaoKey, value, 0).Err()
+}
+
 func IsNil(err error) bool {
 	return errors.Is(err, redis.Nil)
 }

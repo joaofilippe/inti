@@ -26,6 +26,7 @@ type mandadoExtraidoDB struct {
 	NumeroProcesso string `db:"numero_processo"`
 	Nome           string `db:"nome"`
 	Documento      string `db:"documento"`
+	TipoDocumento  string `db:"tipo_documento"`
 	Sexo           string `db:"sexo"`
 	Posicao        string `db:"posicao"`
 	Endereco       string `db:"endereco"`
@@ -46,11 +47,12 @@ type mandadoDB struct {
 	Situacao      string `db:"situacao"`
 	DataCarga     string `db:"data_carga"`
 	Diligencias   string `db:"diligencias"`
-	IsPJ          bool   `db:"is_pj"`
-	ReprNome      string `db:"repr_nome"`
-	ReprDoc       string `db:"repr_doc"`
-	Obs           string `db:"obs"`
-	Atos          []byte `db:"atos"`
+	IsPJ                  bool   `db:"is_pj"`
+	ReprNome              string `db:"repr_nome"`
+	ReprDoc               string `db:"repr_doc"`
+	Obs                   string `db:"obs"`
+	Atos                  []byte `db:"atos"`
+	MotivoNaoRealizacaoID *int   `db:"motivo_nao_realizacao_id"`
 }
 
 type contadoDB struct {
@@ -70,6 +72,7 @@ func (r *MandadoRepository) SalvarExtraido(ctx context.Context, m *dto.MandadoEx
 		NumeroProcesso: m.NumeroProcesso,
 		Nome:           m.Nome,
 		Documento:      m.Documento,
+		TipoDocumento:  m.TipoDocumento,
 		Sexo:           m.Sexo,
 		Posicao:        m.Posicao,
 		Endereco:       m.Endereco,
@@ -77,13 +80,14 @@ func (r *MandadoRepository) SalvarExtraido(ctx context.Context, m *dto.MandadoEx
 	}
 
 	_, err := r.db.NamedExecContext(ctx, `
-		INSERT INTO mandados (numero, lote, numero_processo, nome, documento, sexo, posicao, endereco, cidade, updated_at)
-		VALUES (:numero, :lote, :numero_processo, :nome, :documento, :sexo, :posicao, :endereco, :cidade, NOW())
+		INSERT INTO mandados (numero, lote, numero_processo, nome, documento, tipo_documento, sexo, posicao, endereco, cidade, updated_at)
+		VALUES (:numero, :lote, :numero_processo, :nome, :documento, :tipo_documento, :sexo, :posicao, :endereco, :cidade, NOW())
 		ON CONFLICT (numero) DO UPDATE SET
 			lote            = EXCLUDED.lote,
 			numero_processo = EXCLUDED.numero_processo,
 			nome            = EXCLUDED.nome,
 			documento       = EXCLUDED.documento,
+			tipo_documento  = EXCLUDED.tipo_documento,
 			sexo            = EXCLUDED.sexo,
 			posicao         = EXCLUDED.posicao,
 			endereco        = EXCLUDED.endereco,
@@ -115,22 +119,23 @@ func (r *MandadoRepository) SalvarMandado(ctx context.Context, m *entities.Manda
 	defer tx.Rollback()
 
 	row := mandadoDB{
-		Numero:        m.Mandado,
-		Lote:          m.Lote,
-		Nome:          m.Nome,
-		Documento:     m.Documento,
-		TipoDocumento: m.TipoDocumento,
-		Sexo:          m.Sexo,
-		Posicao:       m.Posicao,
-		Endereco:      m.Endereco,
-		Cidade:        m.Cidade,
-		Situacao:      m.Situacao,
-		DataCarga:     m.DataCarga,
-		Diligencias:   m.Diligencias,
-		IsPJ:          m.IsPJ,
-		ReprNome:      m.RepresentanteNome,
-		ReprDoc:       m.RepresentanteDoc,
-		Obs:           m.Obs,
+		Numero:                m.Mandado,
+		Lote:                  m.Lote,
+		Nome:                  m.Nome,
+		Documento:             m.Documento,
+		TipoDocumento:         m.TipoDocumento,
+		Sexo:                  m.Sexo,
+		Posicao:               m.Posicao,
+		Endereco:              m.Endereco,
+		Cidade:                m.Cidade,
+		Situacao:              m.Situacao,
+		DataCarga:             m.DataCarga,
+		Diligencias:           m.Diligencias,
+		IsPJ:                  m.IsPJ,
+		ReprNome:              m.RepresentanteNome,
+		ReprDoc:               m.RepresentanteDoc,
+		Obs:                   m.Obs,
+		MotivoNaoRealizacaoID: m.MotivoNaoRealizacaoID,
 	}
 
 	atosJSON, err := json.Marshal(m.Atos)
@@ -141,9 +146,9 @@ func (r *MandadoRepository) SalvarMandado(ctx context.Context, m *entities.Manda
 
 	rows, err := tx.NamedQuery(`
 		INSERT INTO mandados (numero, lote, nome, documento, tipo_documento, sexo, posicao, endereco, cidade,
-		                      situacao, data_carga, diligencias, is_pj, repr_nome, repr_doc, obs, atos, updated_at)
+		                      situacao, data_carga, diligencias, is_pj, repr_nome, repr_doc, obs, atos, motivo_nao_realizacao_id, updated_at)
 		VALUES (:numero, :lote, :nome, :documento, :tipo_documento, :sexo, :posicao, :endereco, :cidade,
-		        :situacao, :data_carga, :diligencias, :is_pj, :repr_nome, :repr_doc, :obs, :atos, NOW())
+		        :situacao, :data_carga, :diligencias, :is_pj, :repr_nome, :repr_doc, :obs, :atos, :motivo_nao_realizacao_id, NOW())
 		ON CONFLICT (numero) DO UPDATE SET
 			lote           = EXCLUDED.lote,
 			nome           = EXCLUDED.nome,
@@ -161,6 +166,7 @@ func (r *MandadoRepository) SalvarMandado(ctx context.Context, m *entities.Manda
 			repr_doc       = EXCLUDED.repr_doc,
 			obs            = EXCLUDED.obs,
 			atos           = EXCLUDED.atos,
+			motivo_nao_realizacao_id = EXCLUDED.motivo_nao_realizacao_id,
 			updated_at     = NOW()
 		RETURNING id
 	`, row)

@@ -1,0 +1,2 @@
+ALTER TABLE mandados ALTER COLUMN documento DROP NOT NULL;
+ALTER TABLE mandados ALTER COLUMN tipo_documento DROP NOT NULL;

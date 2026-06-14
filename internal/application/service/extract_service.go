@@ -123,7 +123,7 @@ Campos:
 - Mandado: número do mandado (ex: "205.2026/000511-3")
 - NumeroProcesso: número do processo judicial de origem (ex: "1234567-89.2024.8.26.0100"); deixar vazio se não encontrado
 - Nome: nome completo do destinatário
-- Documento: CPF ou CNPJ (somente dígitos, sem pontuação)
+- Documento: CPF, CNPJ ou RG (somente dígitos, sem pontuação, priorizar CPF caso haja mais de um)
 - Sexo: "M" para masculino, "F" para feminino (inferir pelo nome se não explícito)
 - Posicao: papel processual (ex: "Requerido", "Réu", "Executado")
 - Endereco: endereço completo (rua, número, bairro)
@@ -141,7 +141,7 @@ Campos por mandado:
 - Mandado: número do mandado
 - NumeroProcesso: número do processo judicial de origem (ex: "1234567-89.2024.8.26.0100"); deixar vazio se não encontrado
 - Nome: nome completo do destinatário
-- Documento: CPF ou CNPJ (somente dígitos, sem pontuação)
+- Documento: CPF, CNPJ ou RG (somente dígitos, sem pontuação, priorizar CPF caso haja mais de um)
 - Sexo: "M" para masculino, "F" para feminino
 - Posicao: papel processual (ex: "Requerido", "Réu", "Executado")
 - Endereco: endereço completo, não incluir o CEP do endereço
@@ -224,8 +224,16 @@ func inferirTipoDocumento(doc string) string {
 func normalizarExtraido(m *dto.MandadoExtraido) {
 	m.Nome = toTitleCase(m.Nome)
 	m.Mandado = extrairNumeroMandado(m.Mandado)
-	if m.Documento == "" && m.CPF != "" {
-		m.Documento = m.CPF
+	if m.CPF != "" {
+		digitsCPF := strings.Map(func(r rune) rune {
+			if r >= '0' && r <= '9' {
+				return r
+			}
+			return -1
+		}, m.CPF)
+		if len(digitsCPF) > 0 {
+			m.Documento = digitsCPF
+		}
 	}
 	m.TipoDocumento = inferirTipoDocumento(m.Documento)
 }

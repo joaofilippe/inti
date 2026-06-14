@@ -14,9 +14,10 @@ type Mandado struct {
 	Nome              string
 	Sexo              string
 	Posicao           string
-	Documento         string
-	TipoDocumento     string
-	RepresentanteNome string
-	RepresentanteDoc  string
-	Obs               string
+	Documento             string
+	TipoDocumento         string
+	RepresentanteNome     string
+	RepresentanteDoc      string
+	Obs                   string
+	MotivoNaoRealizacaoID *int
 }

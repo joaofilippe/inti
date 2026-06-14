@@ -7,18 +7,20 @@ import (
 )
 
 type API struct {
-	server    *server.Server
-	mandadoH  MandadoHandler
-	extractH  ExtractHandler
-	tipoAtoH  TipoAtoHandler
+	server       *server.Server
+	mandadoH     MandadoHandler
+	extractH     ExtractHandler
+	tipoAtoH     TipoAtoHandler
+	motivoAtoH   MotivoNaoRealizacaoHandler
 }
 
-func New(srv *server.Server, mandadoH MandadoHandler, extractH ExtractHandler, tipoAtoH TipoAtoHandler) *API {
+func New(srv *server.Server, mandadoH MandadoHandler, extractH ExtractHandler, tipoAtoH TipoAtoHandler, motivoAtoH MotivoNaoRealizacaoHandler) *API {
 	a := &API{
-		server:   srv,
-		mandadoH: mandadoH,
-		extractH: extractH,
-		tipoAtoH: tipoAtoH,
+		server:     srv,
+		mandadoH:   mandadoH,
+		extractH:   extractH,
+		tipoAtoH:   tipoAtoH,
+		motivoAtoH: motivoAtoH,
 	}
 	a.registerRoutes()
 	return a
@@ -35,6 +37,7 @@ func (a *API) registerRoutes() {
 	})
 
 	e.GET("/api/tipos-ato", a.tipoAtoH.ListarTiposAto)
+	e.GET("/api/motivos-nao-realizacao", a.motivoAtoH.ListarMotivosNaoRealizacao)
 
 	e.POST("/api/extract", a.extractH.ExtrairMandado)
 	e.POST("/api/mandados", a.mandadoH.GerarMandado)

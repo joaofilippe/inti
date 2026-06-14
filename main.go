@@ -69,10 +69,20 @@ func main() {
 
 	mandadoRepo := repository.NewMandadoRepository(db)
 	tipoAtoRepo := repository.NewTipoAtoRepository(db)
+	motivoRepo := repository.NewMotivoNaoRealizacaoRepository(db)
 
 	tiposAto, err := tipoAtoRepo.CarregarTodos(context.Background())
 	if err != nil {
 		log.Fatalf("Erro ao carregar tipos de ato: %v", err)
+	}
+
+	motivosList, err := motivoRepo.CarregarTodos(context.Background())
+	if err != nil {
+		log.Fatalf("Erro ao carregar motivos de nao realizacao: %v", err)
+	}
+	motivosMap := make(map[int]entities.MotivoNaoRealizacao)
+	for _, m := range motivosList {
+		motivosMap[m.ID] = m
 	}
 
 	if err := carregarTiposAtoNoCache(context.Background(), redisCache, tiposAto); err != nil {
@@ -80,14 +90,15 @@ func main() {
 	}
 
 	extractSvc := service.NewExtractService(cfg.GeminiAPIKey, redisCache, mandadoRepo)
-	mandadoSvc := service.NewMandadoService(tiposAto)
+	mandadoSvc := service.NewMandadoService(tiposAto, motivosMap)
 
 	mandadoH := handler.NewMandadoHandler(cfg, mandadoSvc)
 	extractH := handler.NewExtractHandler(extractSvc)
 	tipoAtoH := handler.NewTipoAtoHandler(redisCache, tipoAtoRepo)
+	motivoH := handler.NewMotivoNaoRealizacaoHandler(redisCache, motivoRepo)
 
 	srv := server.New(cfg.ServerAddr)
-	a := api.New(srv, mandadoH, extractH, tipoAtoH)
+	a := api.New(srv, mandadoH, extractH, tipoAtoH, motivoH)
 
 	log.Fatal(a.Start())
 }

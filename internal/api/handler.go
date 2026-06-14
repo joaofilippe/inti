@@ -15,3 +15,7 @@ type ExtractHandler interface {
 type TipoAtoHandler interface {
 	ListarTiposAto(c echo.Context) error
 }
+
+type MotivoNaoRealizacaoHandler interface {
+	ListarMotivosNaoRealizacao(c echo.Context) error
+}
