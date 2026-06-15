@@ -7,10 +7,24 @@ CREATE TABLE IF NOT EXISTS motivos_nao_realizacao (
 
 INSERT INTO motivos_nao_realizacao (codigo, explicacao) VALUES
 ('MUD', 'Mudou-se'),
-('END_INSUF', 'Endereço Insuficiente'),
-('DESCONHECIDO', 'Desconhecido no local'),
-('AUSENTE', 'Ausente'),
-('RECUSA', 'Recusa no recebimento'),
-('FALECIDO', 'Falecido'),
-('FORA_JURISD', 'Fora da jurisdição')
+('EI', 'Endereço Insuficiente'),
+('DESC', 'Desconhecido no local'),
+('AUS', 'Ausente'),
+('REC', 'Recusa no recebimento'),
+('FAL', 'Falecido'),
+('IF', 'Imóvel fechado'),
+('NNE', 'Número não existe'),
+('FL', 'Familiar no local'),
+('FIF', 'Familiar no local, informa falecimento'),
+('FIM', 'Familiar no local, informa mudança'),
+('FDNE', 'Familiar no local, desconhece novo endereço'),
+('DMHT', 'Desconhecido mora há algum tempo no local'),
+('FJJ', 'Familiar no local, informa que o executado mora fora da jurisdição'),
+('TSC', 'Terreno sem construções'),
+('TCC', 'Terreno com construções'),
+('ICC', 'Imóvel em construção'),
+('IE', 'Imóvel em ruínas'),
+('IEA', 'Imóvel em construção abandonado'),
+('IER', 'Imóvel em reformas'),
+('OU', 'Outros')
 ON CONFLICT (codigo) DO NOTHING;
