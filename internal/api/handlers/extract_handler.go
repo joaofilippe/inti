@@ -88,3 +88,22 @@ func lerArquivo(fh *multipart.FileHeader) ([]byte, error) {
 	defer f.Close()
 	return io.ReadAll(f)
 }
+
+// ListarResumo retorna uma lista com nome, mandado e mandado abreviado dos mandados extraidos.
+//
+//	@Summary      Listar resumo de mandados
+//	@Description  Retorna uma lista resumida dos mandados extraídos, com a opção de filtrar por lote.
+//	@Tags         mandados
+//	@Produce      json
+//	@Param        lote  query     string  false  "Nome do lote para filtrar"
+//	@Success      200   {array}   dto.MandadoResumoDTO
+//	@Failure      500   {object}  map[string]string
+//	@Router       /api/mandados/resumo [get]
+func (h *ExtractHandler) ListarResumo(c echo.Context) error {
+	lote := c.QueryParam("lote")
+	resumo, err := h.svc.ListarResumo(c.Request().Context(), lote)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, resumo)
+}

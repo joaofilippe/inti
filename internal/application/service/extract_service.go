@@ -96,6 +96,10 @@ func (s *ExtractService) ExtrairLote(ctx context.Context, data []byte, lote stri
 	return dados, nil
 }
 
+func (s *ExtractService) ListarResumo(ctx context.Context, lote string) ([]dto.MandadoResumoDTO, error) {
+	return s.repo.ListarResumo(ctx, lote)
+}
+
 // --- helpers internos ---
 
 var preposicoes = map[string]bool{
@@ -127,7 +131,7 @@ Campos:
 - Sexo: "M" para masculino, "F" para feminino (inferir pelo nome se não explícito)
 - Posicao: papel processual (ex: "Requerido", "Réu", "Executado")
 - Endereco: endereço completo (rua, número, bairro)
-- Cidade: nome da cidade
+- Cidade: nome da cidade (sem a sigla do estado)
 - Whatsapp: número de WhatsApp preenchido manualmente no papelzinho colado no documento; deixar vazio se não encontrado
 - CPF: CPF preenchido manualmente no papelzinho colado no documento (extrair exatamente como escrito, com ou sem pontuação); deixar vazio se não encontrado
 - Email: e-mail preenchido manualmente no papelzinho colado no documento; deixar vazio se não encontrado
@@ -145,7 +149,7 @@ Campos por mandado:
 - Sexo: "M" para masculino, "F" para feminino
 - Posicao: papel processual (ex: "Requerido", "Réu", "Executado")
 - Endereco: endereço completo, não incluir o CEP do endereço
-- Cidade: nome da cidade
+- Cidade: nome da cidade (sem a sigla do estado)
 - Whatsapp: número de WhatsApp preenchido manualmente no papelzinho colado no documento; deixar vazio se não encontrado
 - CPF: CPF preenchido manualmente no papelzinho colado no documento (extrair exatamente como escrito, com ou sem pontuação); deixar vazio se não encontrado
 - Email: e-mail preenchido manualmente no papelzinho colado no documento; deixar vazio se não encontrado
@@ -224,6 +228,14 @@ func inferirTipoDocumento(doc string) string {
 func normalizarExtraido(m *dto.MandadoExtraido) {
 	m.Nome = toTitleCase(m.Nome)
 	m.Mandado = extrairNumeroMandado(m.Mandado)
+
+	if idx := strings.LastIndex(m.Cidade, "-"); idx != -1 {
+		statePart := strings.TrimSpace(m.Cidade[idx+1:])
+		if len(statePart) == 2 {
+			m.Cidade = strings.TrimSpace(m.Cidade[:idx])
+		}
+	}
+
 	if m.CPF != "" {
 		digitsCPF := strings.Map(func(r rune) rune {
 			if r >= '0' && r <= '9' {

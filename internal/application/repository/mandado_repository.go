@@ -199,6 +199,42 @@ func (r *MandadoRepository) SalvarMandado(ctx context.Context, m *entities.Manda
 			return fmt.Errorf("erro ao salvar contato: %w", err)
 		}
 	}
-
 	return tx.Commit()
+}
+
+// ListarResumo retorna a lista resumida de mandados. Opcionalmente filtra por lote.
+func (r *MandadoRepository) ListarResumo(ctx context.Context, lote string) ([]dto.MandadoResumoDTO, error) {
+	var query string
+	var args []interface{}
+
+	if lote != "" {
+		query = `
+			SELECT nome, numero as mandado, 
+			       CASE 
+			           WHEN split_part(numero, '/', 2) != '' THEN ltrim(split_part(numero, '/', 2), '0')
+			           ELSE numero 
+			       END as mandadoabreviado
+			FROM mandados 
+			WHERE lote = $1
+			ORDER BY nome
+		`
+		args = append(args, lote)
+	} else {
+		query = `
+			SELECT nome, numero as mandado, 
+			       CASE 
+			           WHEN split_part(numero, '/', 2) != '' THEN ltrim(split_part(numero, '/', 2), '0')
+			           ELSE numero 
+			       END as mandadoabreviado
+			FROM mandados
+			ORDER BY nome
+		`
+	}
+
+	var resultados []dto.MandadoResumoDTO
+	if err := r.db.SelectContext(ctx, &resultados, query, args...); err != nil {
+		return nil, fmt.Errorf("erro ao listar resumo de mandados: %w", err)
+	}
+
+	return resultados, nil
 }
