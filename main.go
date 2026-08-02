@@ -86,11 +86,13 @@ func main() {
 		motivosMap[m.ID] = m
 	}
 
+	loteRepo := database.NewLoteRepository(db)
+
 	if err := carregarTiposAtoNoCache(context.Background(), redisCache, tiposAto); err != nil {
 		log.Printf("Aviso: não foi possível pré-carregar tipos de ato no Redis: %v", err)
 	}
 
-	extractSvc := service.NewExtractService(cfg.GeminiAPIKey, redisCache, mandadoRepo)
+	extractSvc := service.NewExtractService(cfg.GeminiAPIKey, redisCache, mandadoRepo, loteRepo)
 	mandadoSvc := service.NewMandadoService(tiposAto, motivosMap)
 	authSvc := service.NewAuthService(userRepo)
 

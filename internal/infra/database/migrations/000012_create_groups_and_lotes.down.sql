@@ -1,0 +1,5 @@
+ALTER TABLE mandados DROP CONSTRAINT IF EXISTS fk_mandados_lote;
+
+DROP TABLE IF EXISTS lotes;
+DROP TABLE IF EXISTS user_groups;
+DROP TABLE IF EXISTS groups;

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/json"
@@ -14,21 +15,28 @@ import (
 
 	"github.com/joaofilippe/inti/internal/api/dto"
 	"github.com/joaofilippe/inti/internal/application/repository"
+	"github.com/joaofilippe/inti/internal/document"
 	"github.com/joaofilippe/inti/internal/infra/cache"
+	"github.com/joaofilippe/inti/internal/infra/database"
 )
 
 // ExtractService encapsula a lógica de extração de mandados via IA.
 type ExtractService struct {
-	apiKey string
-	cache  *cache.Cache
-	repo   *repository.MandadoRepository
+	apiKey   string
+	cache    *cache.Cache
+	repo     *repository.MandadoRepository
+	loteRepo *database.LoteRepository
 }
 
-func NewExtractService(apiKey string, c *cache.Cache, repo *repository.MandadoRepository) *ExtractService {
-	return &ExtractService{apiKey: apiKey, cache: c, repo: repo}
+func NewExtractService(apiKey string, c *cache.Cache, repo *repository.MandadoRepository, loteRepo *database.LoteRepository) *ExtractService {
+	return &ExtractService{apiKey: apiKey, cache: c, repo: repo, loteRepo: loteRepo}
 }
 
-func (s *ExtractService) ExtrairMandado(ctx context.Context, data []byte, lote string) (dto.MandadoExtraido, error) {
+func (s *ExtractService) ExtrairMandado(ctx context.Context, data []byte, lote string, adminUserID string) (dto.MandadoExtraido, error) {
+	_, err := s.loteRepo.FindOrCreateLote(ctx, lote, adminUserID)
+	if err != nil {
+		return dto.MandadoExtraido{}, fmt.Errorf("erro ao registrar lote: %w", err)
+	}
 	key := hashKey(data)
 
 	if cached, err := s.cache.Get(ctx, key); err == nil {
@@ -60,7 +68,11 @@ func (s *ExtractService) ExtrairMandado(ctx context.Context, data []byte, lote s
 	return dados, nil
 }
 
-func (s *ExtractService) ExtrairLote(ctx context.Context, data []byte, lote string) ([]dto.MandadoExtraido, error) {
+func (s *ExtractService) ExtrairLote(ctx context.Context, data []byte, lote string, adminUserID string) ([]dto.MandadoExtraido, error) {
+	_, err := s.loteRepo.FindOrCreateLote(ctx, lote, adminUserID)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao registrar lote: %w", err)
+	}
 	key := hashKey(data)
 
 	if cached, err := s.cache.Get(ctx, key); err == nil {
@@ -96,8 +108,8 @@ func (s *ExtractService) ExtrairLote(ctx context.Context, data []byte, lote stri
 	return dados, nil
 }
 
-func (s *ExtractService) ListarResumo(ctx context.Context, lote string) ([]dto.MandadoResumoDTO, error) {
-	return s.repo.ListarResumo(ctx, lote)
+func (s *ExtractService) ListarResumo(ctx context.Context, lote string, adminUserID string) ([]dto.MandadoResumoDTO, error) {
+	return s.repo.ListarResumo(ctx, lote, adminUserID)
 }
 
 // --- helpers internos ---
@@ -291,7 +303,11 @@ func extrairDadosLote(ctx context.Context, data []byte, apiKey string) ([]dto.Ma
 }
 
 // ExtrairDeExcel processa uma planilha Excel e salva os dados no repositório.
-func (s *ExtractService) ExtrairDeExcel(ctx context.Context, file []byte, filename string) ([]dto.MandadoExtraido, error) {
+func (s *ExtractService) ExtrairDeExcel(ctx context.Context, file []byte, filename string, adminUserID string) ([]dto.MandadoExtraido, error) {
+	_, err := s.loteRepo.FindOrCreateLote(ctx, filename, adminUserID)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao registrar lote: %w", err)
+	}
 	reader := bytes.NewReader(file)
 	mandados, err := document.ParseExcel(reader, filename)
 	if err != nil {
