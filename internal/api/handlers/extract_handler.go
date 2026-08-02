@@ -107,3 +107,34 @@ func (h *ExtractHandler) ListarResumo(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, resumo)
 }
+
+// ExtrairDeExcel processa um arquivo Excel para pré-cadastro.
+//
+//	@Summary      Pré-cadastro via Excel
+//	@Description  Recebe um arquivo Excel (.xlsx) e cadastra os mandados.
+//	@Tags         extração
+//	@Accept       multipart/form-data
+//	@Produce      json
+//	@Param        file  formData  file                      true  "Arquivo XLSX"
+//	@Success      200   {array}   dto.MandadoExtraido       "Lista de mandados pré-cadastrados"
+//	@Failure      400   {object}  map[string]string         "Arquivo inválido ou não enviado"
+//	@Failure      500   {object}  map[string]string         "Erro interno"
+//	@Router       /api/batch/pre-cadastro/excel [post]
+func (h *ExtractHandler) ExtrairDeExcel(c echo.Context) error {
+	file, err := c.FormFile("file")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Arquivo inválido ou não enviado"})
+	}
+
+	data, err := lerArquivo(file)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	dados, err := h.svc.ExtrairDeExcel(c.Request().Context(), data, file.Filename)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, dados)
+}

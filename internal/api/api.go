@@ -65,6 +65,7 @@ func (a *API) registerRoutes() {
 	apiGroup.GET("/mandados/resumo", a.extractH.ListarResumo)
 
 	apiGroup.POST("/batch/extract", a.extractH.ExtrairLote)
+	apiGroup.POST("/batch/pre-cadastro/excel", a.extractH.ExtrairDeExcel)
 	apiGroup.POST("/batch/mandados", a.mandadoH.GerarLote)
 }
 

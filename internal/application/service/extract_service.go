@@ -290,6 +290,24 @@ func extrairDadosLote(ctx context.Context, data []byte, apiKey string) ([]dto.Ma
 	return results, nil
 }
 
+// ExtrairDeExcel processa uma planilha Excel e salva os dados no repositório.
+func (s *ExtractService) ExtrairDeExcel(ctx context.Context, file []byte, filename string) ([]dto.MandadoExtraido, error) {
+	reader := bytes.NewReader(file)
+	mandados, err := document.ParseExcel(reader, filename)
+	if err != nil {
+		return nil, fmt.Errorf("falha ao interpretar excel: %w", err)
+	}
+
+	if len(mandados) > 0 {
+		err = s.repo.SalvarLoteExtraido(ctx, mandados)
+		if err != nil {
+			return nil, fmt.Errorf("falha ao salvar mandados: %w", err)
+		}
+	}
+
+	return mandados, nil
+}
+
 func hashKey(data []byte) string {
 	h := sha256.Sum256(data)
 	return fmt.Sprintf("extract:%x", h)
