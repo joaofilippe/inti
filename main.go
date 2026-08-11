@@ -70,7 +70,6 @@ func main() {
 	mandadoRepo := repository.NewMandadoRepository(db)
 	tipoAtoRepo := repository.NewTipoAtoRepository(db)
 	motivoRepo := repository.NewMotivoNaoRealizacaoRepository(db)
-	userRepo := database.NewUserRepository(db)
 
 	tiposAto, err := tipoAtoRepo.CarregarTodos(context.Background())
 	if err != nil {
@@ -86,24 +85,20 @@ func main() {
 		motivosMap[m.ID] = m
 	}
 
-	loteRepo := database.NewLoteRepository(db)
-
 	if err := carregarTiposAtoNoCache(context.Background(), redisCache, tiposAto); err != nil {
 		log.Printf("Aviso: não foi possível pré-carregar tipos de ato no Redis: %v", err)
 	}
 
-	extractSvc := service.NewExtractService(cfg.GeminiAPIKey, redisCache, mandadoRepo, loteRepo)
+	extractSvc := service.NewExtractService(cfg.GeminiAPIKey, redisCache, mandadoRepo)
 	mandadoSvc := service.NewMandadoService(tiposAto, motivosMap)
-	authSvc := service.NewAuthService(userRepo)
 
 	mandadoH := handler.NewMandadoHandler(cfg, mandadoSvc)
 	extractH := handler.NewExtractHandler(extractSvc)
 	tipoAtoH := handler.NewTipoAtoHandler(redisCache, tipoAtoRepo)
 	motivoH := handler.NewMotivoNaoRealizacaoHandler(redisCache, motivoRepo)
-	authH := handler.NewAuthHandler(authSvc)
 
 	srv := server.New(cfg.ServerAddr)
-	a := api.New(srv, authH, mandadoH, extractH, tipoAtoH, motivoH)
+	a := api.New(srv, mandadoH, extractH, tipoAtoH, motivoH)
 
 	log.Fatal(a.Start())
 }

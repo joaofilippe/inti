@@ -29,9 +29,3 @@ type MandadoPositivoDTO struct {
 	Obs                   string       `json:"Obs"`
 	MotivoNaoRealizacaoID *int         `json:"MotivoNaoRealizacaoId,omitempty"`
 }
-
-type MandadoResumoDTO struct {
-	Nome             string `json:"Nome" db:"nome"`
-	Mandado          string `json:"Mandado" db:"mandado"`
-	MandadoAbreviado string `json:"MandadoAbreviado" db:"mandadoabreviado"`
-}

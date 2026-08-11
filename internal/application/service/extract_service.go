@@ -1,7 +1,6 @@
 package service
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/json"
@@ -15,28 +14,21 @@ import (
 
 	"github.com/joaofilippe/inti/internal/api/dto"
 	"github.com/joaofilippe/inti/internal/application/repository"
-	"github.com/joaofilippe/inti/internal/document"
 	"github.com/joaofilippe/inti/internal/infra/cache"
-	"github.com/joaofilippe/inti/internal/infra/database"
 )
 
 // ExtractService encapsula a lógica de extração de mandados via IA.
 type ExtractService struct {
-	apiKey   string
-	cache    *cache.Cache
-	repo     *repository.MandadoRepository
-	loteRepo *database.LoteRepository
+	apiKey string
+	cache  *cache.Cache
+	repo   *repository.MandadoRepository
 }
 
-func NewExtractService(apiKey string, c *cache.Cache, repo *repository.MandadoRepository, loteRepo *database.LoteRepository) *ExtractService {
-	return &ExtractService{apiKey: apiKey, cache: c, repo: repo, loteRepo: loteRepo}
+func NewExtractService(apiKey string, c *cache.Cache, repo *repository.MandadoRepository) *ExtractService {
+	return &ExtractService{apiKey: apiKey, cache: c, repo: repo}
 }
 
-func (s *ExtractService) ExtrairMandado(ctx context.Context, data []byte, lote string, adminUserID string) (dto.MandadoExtraido, error) {
-	_, err := s.loteRepo.FindOrCreateLote(ctx, lote, adminUserID)
-	if err != nil {
-		return dto.MandadoExtraido{}, fmt.Errorf("erro ao registrar lote: %w", err)
-	}
+func (s *ExtractService) ExtrairMandado(ctx context.Context, data []byte, lote string) (dto.MandadoExtraido, error) {
 	key := hashKey(data)
 
 	if cached, err := s.cache.Get(ctx, key); err == nil {
@@ -68,11 +60,7 @@ func (s *ExtractService) ExtrairMandado(ctx context.Context, data []byte, lote s
 	return dados, nil
 }
 
-func (s *ExtractService) ExtrairLote(ctx context.Context, data []byte, lote string, adminUserID string) ([]dto.MandadoExtraido, error) {
-	_, err := s.loteRepo.FindOrCreateLote(ctx, lote, adminUserID)
-	if err != nil {
-		return nil, fmt.Errorf("erro ao registrar lote: %w", err)
-	}
+func (s *ExtractService) ExtrairLote(ctx context.Context, data []byte, lote string) ([]dto.MandadoExtraido, error) {
 	key := hashKey(data)
 
 	if cached, err := s.cache.Get(ctx, key); err == nil {
@@ -108,10 +96,6 @@ func (s *ExtractService) ExtrairLote(ctx context.Context, data []byte, lote stri
 	return dados, nil
 }
 
-func (s *ExtractService) ListarResumo(ctx context.Context, lote string, adminUserID string) ([]dto.MandadoResumoDTO, error) {
-	return s.repo.ListarResumo(ctx, lote, adminUserID)
-}
-
 // --- helpers internos ---
 
 var preposicoes = map[string]bool{
@@ -143,7 +127,7 @@ Campos:
 - Sexo: "M" para masculino, "F" para feminino (inferir pelo nome se não explícito)
 - Posicao: papel processual (ex: "Requerido", "Réu", "Executado")
 - Endereco: endereço completo (rua, número, bairro)
-- Cidade: nome da cidade (sem a sigla do estado)
+- Cidade: nome da cidade
 - Whatsapp: número de WhatsApp preenchido manualmente no papelzinho colado no documento; deixar vazio se não encontrado
 - CPF: CPF preenchido manualmente no papelzinho colado no documento (extrair exatamente como escrito, com ou sem pontuação); deixar vazio se não encontrado
 - Email: e-mail preenchido manualmente no papelzinho colado no documento; deixar vazio se não encontrado
@@ -161,7 +145,7 @@ Campos por mandado:
 - Sexo: "M" para masculino, "F" para feminino
 - Posicao: papel processual (ex: "Requerido", "Réu", "Executado")
 - Endereco: endereço completo, não incluir o CEP do endereço
-- Cidade: nome da cidade (sem a sigla do estado)
+- Cidade: nome da cidade
 - Whatsapp: número de WhatsApp preenchido manualmente no papelzinho colado no documento; deixar vazio se não encontrado
 - CPF: CPF preenchido manualmente no papelzinho colado no documento (extrair exatamente como escrito, com ou sem pontuação); deixar vazio se não encontrado
 - Email: e-mail preenchido manualmente no papelzinho colado no documento; deixar vazio se não encontrado
@@ -240,14 +224,6 @@ func inferirTipoDocumento(doc string) string {
 func normalizarExtraido(m *dto.MandadoExtraido) {
 	m.Nome = toTitleCase(m.Nome)
 	m.Mandado = extrairNumeroMandado(m.Mandado)
-
-	if idx := strings.LastIndex(m.Cidade, "-"); idx != -1 {
-		statePart := strings.TrimSpace(m.Cidade[idx+1:])
-		if len(statePart) == 2 {
-			m.Cidade = strings.TrimSpace(m.Cidade[:idx])
-		}
-	}
-
 	if m.CPF != "" {
 		digitsCPF := strings.Map(func(r rune) rune {
 			if r >= '0' && r <= '9' {
@@ -300,28 +276,6 @@ func extrairDadosLote(ctx context.Context, data []byte, apiKey string) ([]dto.Ma
 
 	normalizarLoteExtraido(results)
 	return results, nil
-}
-
-// ExtrairDeExcel processa uma planilha Excel e salva os dados no repositório.
-func (s *ExtractService) ExtrairDeExcel(ctx context.Context, file []byte, filename string, adminUserID string) ([]dto.MandadoExtraido, error) {
-	_, err := s.loteRepo.FindOrCreateLote(ctx, filename, adminUserID)
-	if err != nil {
-		return nil, fmt.Errorf("erro ao registrar lote: %w", err)
-	}
-	reader := bytes.NewReader(file)
-	mandados, err := document.ParseExcel(reader, filename)
-	if err != nil {
-		return nil, fmt.Errorf("falha ao interpretar excel: %w", err)
-	}
-
-	if len(mandados) > 0 {
-		err = s.repo.SalvarLoteExtraido(ctx, mandados)
-		if err != nil {
-			return nil, fmt.Errorf("falha ao salvar mandados: %w", err)
-		}
-	}
-
-	return mandados, nil
 }
 
 func hashKey(data []byte) string {

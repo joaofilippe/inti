@@ -10,8 +10,6 @@ type MandadoHandler interface {
 type ExtractHandler interface {
 	ExtrairMandado(c echo.Context) error
 	ExtrairLote(c echo.Context) error
-	ListarResumo(c echo.Context) error
-	ExtrairDeExcel(c echo.Context) error
 }
 
 type TipoAtoHandler interface {

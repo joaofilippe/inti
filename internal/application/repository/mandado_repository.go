@@ -199,48 +199,6 @@ func (r *MandadoRepository) SalvarMandado(ctx context.Context, m *entities.Manda
 			return fmt.Errorf("erro ao salvar contato: %w", err)
 		}
 	}
+
 	return tx.Commit()
-}
-
-// ListarResumo retorna a lista resumida de mandados. Opcionalmente filtra por lote e obrigatoriamente por adminUserID.
-func (r *MandadoRepository) ListarResumo(ctx context.Context, lote string, adminUserID string) ([]dto.MandadoResumoDTO, error) {
-	var query string
-	var args []interface{}
-
-	if lote != "" {
-		query = `
-			SELECT m.nome, m.numero as mandado, 
-			       CASE 
-			           WHEN split_part(m.numero, '/', 2) != '' THEN ltrim(split_part(m.numero, '/', 2), '0')
-			           ELSE m.numero 
-			       END as mandadoabreviado
-			FROM mandados m
-			INNER JOIN lotes l ON l.nome_lote = m.lote
-			LEFT JOIN user_groups ug ON ug.group_id = l.group_id AND ug.user_id = $2
-			WHERE m.lote = $1 AND (l.admin_user_id = $2 OR ug.user_id = $2)
-			ORDER BY m.nome
-		`
-		args = append(args, lote, adminUserID)
-	} else {
-		query = `
-			SELECT m.nome, m.numero as mandado, 
-			       CASE 
-			           WHEN split_part(m.numero, '/', 2) != '' THEN ltrim(split_part(m.numero, '/', 2), '0')
-			           ELSE m.numero 
-			       END as mandadoabreviado
-			FROM mandados m
-			INNER JOIN lotes l ON l.nome_lote = m.lote
-			LEFT JOIN user_groups ug ON ug.group_id = l.group_id AND ug.user_id = $1
-			WHERE (l.admin_user_id = $1 OR ug.user_id = $1)
-			ORDER BY m.nome
-		`
-		args = append(args, adminUserID)
-	}
-
-	var resultados []dto.MandadoResumoDTO
-	if err := r.db.SelectContext(ctx, &resultados, query, args...); err != nil {
-		return nil, fmt.Errorf("erro ao listar resumo de mandados: %w", err)
-	}
-
-	return resultados, nil
 }

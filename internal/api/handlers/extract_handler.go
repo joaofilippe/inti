@@ -6,7 +6,6 @@ import (
 	"mime/multipart"
 	"net/http"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/joaofilippe/inti/internal/application/service"
 	"github.com/labstack/echo/v4"
 )
@@ -17,22 +16,6 @@ type ExtractHandler struct {
 
 func NewExtractHandler(svc *service.ExtractService) *ExtractHandler {
 	return &ExtractHandler{svc: svc}
-}
-
-func getUserID(c echo.Context) (string, error) {
-	userToken, ok := c.Get("user").(*jwt.Token)
-	if !ok {
-		return "", fmt.Errorf("user token not found")
-	}
-	claims, ok := userToken.Claims.(jwt.MapClaims)
-	if !ok {
-		return "", fmt.Errorf("invalid claims")
-	}
-	sub, ok := claims["sub"].(string)
-	if !ok {
-		return "", fmt.Errorf("invalid sub claim")
-	}
-	return sub, nil
 }
 
 // ExtrairMandado extrai dados de um único documento PDF.
@@ -48,11 +31,6 @@ func getUserID(c echo.Context) (string, error) {
 //	@Failure      500   {object}  map[string]string       "Erro interno"
 //	@Router       /api/extract [post]
 func (h *ExtractHandler) ExtrairMandado(c echo.Context) error {
-	userID, err := getUserID(c)
-	if err != nil {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
-	}
-
 	file, err := c.FormFile("file")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Arquivo inválido ou não enviado"})
@@ -63,7 +41,7 @@ func (h *ExtractHandler) ExtrairMandado(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	dados, err := h.svc.ExtrairMandado(c.Request().Context(), data, file.Filename, userID)
+	dados, err := h.svc.ExtrairMandado(c.Request().Context(), data, file.Filename)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -84,11 +62,6 @@ func (h *ExtractHandler) ExtrairMandado(c echo.Context) error {
 //	@Failure      500   {object}  map[string]string         "Erro interno"
 //	@Router       /api/batch/extract [post]
 func (h *ExtractHandler) ExtrairLote(c echo.Context) error {
-	userID, err := getUserID(c)
-	if err != nil {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
-	}
-
 	file, err := c.FormFile("file")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Arquivo inválido ou não enviado"})
@@ -99,7 +72,7 @@ func (h *ExtractHandler) ExtrairLote(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
-	dados, err := h.svc.ExtrairLote(c.Request().Context(), data, file.Filename, userID)
+	dados, err := h.svc.ExtrairLote(c.Request().Context(), data, file.Filename)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -114,64 +87,4 @@ func lerArquivo(fh *multipart.FileHeader) ([]byte, error) {
 	}
 	defer f.Close()
 	return io.ReadAll(f)
-}
-
-// ListarResumo retorna uma lista com nome, mandado e mandado abreviado dos mandados extraidos.
-//
-//	@Summary      Listar resumo de mandados
-//	@Description  Retorna uma lista resumida dos mandados extraídos, com a opção de filtrar por lote.
-//	@Tags         mandados
-//	@Produce      json
-//	@Param        lote  query     string  false  "Nome do lote para filtrar"
-//	@Success      200   {array}   dto.MandadoResumoDTO
-//	@Failure      500   {object}  map[string]string
-//	@Router       /api/mandados/resumo [get]
-func (h *ExtractHandler) ListarResumo(c echo.Context) error {
-	userID, err := getUserID(c)
-	if err != nil {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
-	}
-
-	lote := c.QueryParam("lote")
-	resumo, err := h.svc.ListarResumo(c.Request().Context(), lote, userID)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-	}
-	return c.JSON(http.StatusOK, resumo)
-}
-
-// ExtrairDeExcel processa um arquivo Excel para pré-cadastro.
-//
-//	@Summary      Pré-cadastro via Excel
-//	@Description  Recebe um arquivo Excel (.xlsx) e cadastra os mandados.
-//	@Tags         extração
-//	@Accept       multipart/form-data
-//	@Produce      json
-//	@Param        file  formData  file                      true  "Arquivo XLSX"
-//	@Success      200   {array}   dto.MandadoExtraido       "Lista de mandados pré-cadastrados"
-//	@Failure      400   {object}  map[string]string         "Arquivo inválido ou não enviado"
-//	@Failure      500   {object}  map[string]string         "Erro interno"
-//	@Router       /api/batch/pre-cadastro/excel [post]
-func (h *ExtractHandler) ExtrairDeExcel(c echo.Context) error {
-	userID, err := getUserID(c)
-	if err != nil {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
-	}
-
-	file, err := c.FormFile("file")
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Arquivo inválido ou não enviado"})
-	}
-
-	data, err := lerArquivo(file)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-	}
-
-	dados, err := h.svc.ExtrairDeExcel(c.Request().Context(), data, file.Filename, userID)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
-	}
-
-	return c.JSON(http.StatusOK, dados)
 }
