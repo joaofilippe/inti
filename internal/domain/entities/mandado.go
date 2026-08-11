@@ -19,5 +19,6 @@ type Mandado struct {
 	RepresentanteNome     string
 	RepresentanteDoc      string
 	Obs                   string
+	TipoAto               string
 	MotivoNaoRealizacaoID *int
 }

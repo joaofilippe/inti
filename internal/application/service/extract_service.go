@@ -131,9 +131,11 @@ Campos:
 - Whatsapp: número de WhatsApp preenchido manualmente no papelzinho colado no documento; deixar vazio se não encontrado
 - CPF: CPF preenchido manualmente no papelzinho colado no documento (extrair exatamente como escrito, com ou sem pontuação); deixar vazio se não encontrado
 - Email: e-mail preenchido manualmente no papelzinho colado no documento; deixar vazio se não encontrado
+- DataCarga: data da carga localizada no lado esquerdo da folha (no formato DD/MM); deixar vazio se não encontrado
+- TipoAto: tipo de ato localizado no centro da folha; deixar vazio se não encontrado
 
 Retorne exatamente este JSON:
-{"Mandado":"","NumeroProcesso":"","Nome":"","Documento":"","Sexo":"","Posicao":"","Endereco":"","Cidade":"","Whatsapp":"","CPF":"","Email":""}`
+{"Mandado":"","NumeroProcesso":"","Nome":"","Documento":"","Sexo":"","Posicao":"","Endereco":"","Cidade":"","Whatsapp":"","CPF":"","Email":"","DataCarga":"","TipoAto":""}`
 
 const promptLote = `Este PDF contém múltiplas folhas de rosto de mandados judiciais brasileiros. Para CADA página que contiver uma folha de rosto, extraia os dados e retorne SOMENTE um array JSON válido, sem texto adicional, sem blocos de código markdown.
 
@@ -149,9 +151,11 @@ Campos por mandado:
 - Whatsapp: número de WhatsApp preenchido manualmente no papelzinho colado no documento; deixar vazio se não encontrado
 - CPF: CPF preenchido manualmente no papelzinho colado no documento (extrair exatamente como escrito, com ou sem pontuação); deixar vazio se não encontrado
 - Email: e-mail preenchido manualmente no papelzinho colado no documento; deixar vazio se não encontrado
+- DataCarga: data da carga localizada no lado esquerdo da folha (no formato DD/MM); deixar vazio se não encontrado
+- TipoAto: tipo de ato localizado no centro da folha; deixar vazio se não encontrado
 
 Retorne exatamente este array JSON:
-[{"Mandado":"","NumeroProcesso":"","Nome":"","Documento":"","Sexo":"","Posicao":"","Endereco":"","Cidade":"","Whatsapp":"","CPF":"","Email":""}]`
+[{"Mandado":"","NumeroProcesso":"","Nome":"","Documento":"","Sexo":"","Posicao":"","Endereco":"","Cidade":"","Whatsapp":"","CPF":"","Email":"","DataCarga":"","TipoAto":""}]`
 
 func detectMime(data []byte) string {
 	if len(data) >= 4 && string(data[:4]) == "%PDF" {

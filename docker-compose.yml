@@ -43,5 +43,35 @@ services:
     volumes:
       - ./pgadmin-servers.json:/pgadmin4/servers.json:ro
 
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - GITHUB_TOKEN=${GITHUB_TOKEN}
+    container_name: inti-backend
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgres://inti:inti@postgres:5432/inti?sslmode=disable
+      - REDIS_ADDR=redis:6379
+    depends_on:
+      - postgres
+      - redis
+
+  frontend:
+    build:
+      context: ../../angular/inti-front
+      dockerfile: Dockerfile
+      args:
+        - GITHUB_TOKEN=${GITHUB_TOKEN}
+    container_name: inti-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
 volumes:
   postgres_data:

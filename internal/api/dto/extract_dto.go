@@ -14,4 +14,6 @@ type MandadoExtraido struct {
 	Whatsapp       string `json:"Whatsapp"`
 	CPF            string `json:"CPF"`
 	Email          string `json:"Email"`
+	DataCarga      string `json:"DataCarga"`
+	TipoAto        string `json:"TipoAto"`
 }
