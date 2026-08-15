@@ -1,0 +1,1 @@
+ALTER TABLE mandados ADD COLUMN tipo_ato VARCHAR(255);
