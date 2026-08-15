@@ -18,6 +18,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inti -d inti"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redisinsight:
     image: redis/redisinsight:latest
@@ -58,8 +63,10 @@ services:
       - DATABASE_URL=postgres://inti:inti@postgres:5432/inti?sslmode=disable
       - REDIS_ADDR=redis:6379
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   frontend:
     build:
