@@ -15,6 +15,48 @@ const btnLoteLimpar = document.getElementById("btn-lote-limpar");
 const form = document.getElementById("mandadoForm");
 const step1 = document.getElementById("step-1");
 
+function preencherCamposAnotacoes(data) {
+  if (data.DataCarga) {
+    const elDataCarga = document.getElementById("data-carga");
+    if (elDataCarga) elDataCarga.value = data.DataCarga;
+  }
+  if (data.Resultado) {
+    const elSituacao = document.getElementById("situacao");
+    if (elSituacao) {
+      elSituacao.value = data.Resultado;
+      elSituacao.dispatchEvent(new Event("input"));
+    }
+  }
+  if (data.TipoAto || data.DataCumprimento || data.HoraCumprimento) {
+    const codigos = data.TipoAto ? (data.TipoAto.match(/\d+/g) || [data.TipoAto]) : [""];
+    const atosContainer = document.getElementById("atos-container");
+    const btnAddAto = document.getElementById("btn-add-ato");
+
+    if (atosContainer) {
+      const rows = atosContainer.querySelectorAll(".ato-row");
+      for (let i = 1; i < rows.length; i++) {
+        rows[i].remove();
+      }
+
+      codigos.forEach((cod, idx) => {
+        if (idx > 0 && btnAddAto) {
+          btnAddAto.click();
+        }
+        const allRows = atosContainer.querySelectorAll(".ato-row");
+        const targetRow = allRows[idx];
+        if (targetRow) {
+          const atoNomeEl = targetRow.querySelector(".ato-nome");
+          if (atoNomeEl) atoNomeEl.value = cod;
+          const atoDataEl = targetRow.querySelector(".ato-data");
+          if (atoDataEl && data.DataCumprimento) atoDataEl.value = data.DataCumprimento;
+          const atoHoraEl = targetRow.querySelector(".ato-hora");
+          if (atoHoraEl && data.HoraCumprimento) atoHoraEl.value = data.HoraCumprimento;
+        }
+      });
+    }
+  }
+}
+
 function preencherFormComLote(m) {
   if (m.Mandado) document.getElementById("mandado-id").value = m.Mandado;
   if (m.Nome) document.getElementById("nome-alvo").value = m.Nome;
@@ -32,6 +74,7 @@ function preencherFormComLote(m) {
     if (m.Sexo === "M" && rM) rM.checked = true;
     else if (m.Sexo === "F" && rF) rF.checked = true;
   }
+  preencherCamposAnotacoes(m);
   step1.classList.add("active");
   document.getElementById("mandadoForm").scrollIntoView({ behavior: "smooth" });
 }
@@ -201,6 +244,7 @@ if (uploadInput) {
             rF.checked = true;
         }
 
+        preencherCamposAnotacoes(data);
         uploadInput.value = "";
       })
       .catch((err) => {
@@ -454,11 +498,20 @@ inputSituacao.addEventListener("input", (e) => {
     lblSituacao.innerHTML = "Situação";
     btnSave.innerText = "Aguardando Situação...";
     btnSave.style.backgroundColor = "var(--primary-color)";
+    return;
   }
 
   if (val === "4") {
     lblSituacao.innerHTML =
       'Situação <span style="color: var(--success-color)">(Positivo)</span>';
+  } else if (val === "5") {
+    lblSituacao.innerHTML =
+      'Situação <span style="color: #f59e0b)">(Parcial)</span>';
+  } else if (val === "6") {
+    lblSituacao.innerHTML =
+      'Situação <span style="color: var(--error-color)">(Negativo)</span>';
+  } else {
+    lblSituacao.innerHTML = "Situação";
   }
 
   btnSave.innerText = "Salvar";
@@ -471,9 +524,9 @@ btnSave.addEventListener("click", () => {
     return;
   }
   const sit = inputSituacao.value;
-  if (sit !== "4" && sit !== "6") {
+  if (sit !== "4" && sit !== "5" && sit !== "6") {
     alert(
-      "Por favor, digite 4 para Positivo ou 6 para Negativo no campo de Situação.",
+      "Por favor, digite 4 para Positivo, 5 para Parcial ou 6 para Negativo no campo de Situação.",
     );
     inputSituacao.focus();
     return;

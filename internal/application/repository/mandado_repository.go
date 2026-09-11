@@ -31,6 +31,7 @@ type mandadoExtraidoDB struct {
 	Posicao        string `db:"posicao"`
 	Endereco       string `db:"endereco"`
 	Cidade         string `db:"cidade"`
+	Situacao       string `db:"situacao"`
 	DataCarga      string `db:"data_carga"`
 	TipoAto        string `db:"tipo_ato"`
 }
@@ -80,13 +81,14 @@ func (r *MandadoRepository) SalvarExtraido(ctx context.Context, m *dto.MandadoEx
 		Posicao:        m.Posicao,
 		Endereco:       m.Endereco,
 		Cidade:         m.Cidade,
+		Situacao:       m.Resultado,
 		DataCarga:      m.DataCarga,
 		TipoAto:        m.TipoAto,
 	}
 
 	_, err := r.db.NamedExecContext(ctx, `
-		INSERT INTO mandados (numero, lote, numero_processo, nome, documento, tipo_documento, sexo, posicao, endereco, cidade, data_carga, tipo_ato, updated_at)
-		VALUES (:numero, :lote, :numero_processo, :nome, :documento, :tipo_documento, :sexo, :posicao, :endereco, :cidade, :data_carga, :tipo_ato, NOW())
+		INSERT INTO mandados (numero, lote, numero_processo, nome, documento, tipo_documento, sexo, posicao, endereco, cidade, situacao, data_carga, tipo_ato, updated_at)
+		VALUES (:numero, :lote, :numero_processo, :nome, :documento, :tipo_documento, :sexo, :posicao, :endereco, :cidade, :situacao, :data_carga, :tipo_ato, NOW())
 		ON CONFLICT (numero) DO UPDATE SET
 			lote            = EXCLUDED.lote,
 			numero_processo = EXCLUDED.numero_processo,
@@ -97,6 +99,7 @@ func (r *MandadoRepository) SalvarExtraido(ctx context.Context, m *dto.MandadoEx
 			posicao         = EXCLUDED.posicao,
 			endereco        = EXCLUDED.endereco,
 			cidade          = EXCLUDED.cidade,
+			situacao        = EXCLUDED.situacao,
 			data_carga      = EXCLUDED.data_carga,
 			tipo_ato        = EXCLUDED.tipo_ato,
 			updated_at      = NOW()

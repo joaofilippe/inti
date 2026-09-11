@@ -119,8 +119,15 @@ const geminiModel = "gemini-2.5-flash"
 
 const promptSingle = `Esta é a folha de rosto de um mandado judicial brasileiro. Extraia os dados e retorne SOMENTE JSON válido, sem texto adicional, sem blocos de código markdown.
 
-Campos:
-- Mandado: número do mandado (ex: "205.2026/000511-3")
+No canto superior da folha (margem ou cabeçalho superior), há anotações manuais organizadas em sequência ordenada da esquerda para a direita:
+1. Data da Carga: data em que o mandado foi recebido/carregado (no formato DD/MM).
+2. Tipo do Ato: localizado logo após a data da carga. IMPORTANTE: este campo conterá APENAS NÚMEROS que representam o(s) código(s) do tipo de ato (por exemplo: "1", "2", ou múltiplos atos como "1 e 2", "1, 2", "1/2"). NUNCA virá escrito por extenso como "Citação" nem "1 - Citação", virá APENAS o(s) número(s) do código. Extraia exatamente o(s) número(s) anotado(s).
+3. Encontrado: se a pessoa/destinatário foi encontrado(a). Retorne "2" para Sim/Encontrado ou "3" para Não/Não Encontrado.
+4. Resultado: o resultado do cumprimento da diligência. Retorne o código numérico: "4" para Positivo, "5" para Parcial, "6" para Negativo.
+5. Data e Hora do Cumprimento: data (formato DD/MM) e horário (formato HH:MM) em que o ato foi cumprido.
+
+Campos a extrair:
+- Mandado: número do mandado judicial impresso (ex: "205.2026/000511-3")
 - NumeroProcesso: número do processo judicial de origem (ex: "1234567-89.2024.8.26.0100"); deixar vazio se não encontrado
 - Nome: nome completo do destinatário
 - Documento: CPF, CNPJ ou RG (somente dígitos, sem pontuação, priorizar CPF caso haja mais de um)
@@ -128,19 +135,30 @@ Campos:
 - Posicao: papel processual (ex: "Requerido", "Réu", "Executado")
 - Endereco: endereço completo (rua, número, bairro)
 - Cidade: nome da cidade
-- Whatsapp: número de WhatsApp preenchido manualmente no papelzinho colado no documento; deixar vazio se não encontrado
-- CPF: CPF preenchido manualmente no papelzinho colado no documento (extrair exatamente como escrito, com ou sem pontuação); deixar vazio se não encontrado
-- Email: e-mail preenchido manualmente no papelzinho colado no documento; deixar vazio se não encontrado
-- DataCarga: data da carga localizada no lado esquerdo da folha (no formato DD/MM); deixar vazio se não encontrado
-- TipoAto: tipo de ato localizado no centro da folha; deixar vazio se não encontrado
+- DataCarga: data da carga localizada no canto superior à esquerda (no formato DD/MM); deixar vazio se não encontrado
+- TipoAto: apenas o(s) número(s) do código do ato anotado no canto superior após a data da carga (ex: "1", "2", ou múltiplos como "1, 2" ou "1 e 2"); extrair apenas os dígitos/números dos códigos; deixar vazio se não encontrado
+- Encontrado: "2" para sim, "3" para não, localizado no canto superior após o tipo do ato; deixar vazio se não encontrado
+- Resultado: "4" para Positivo, "5" para Parcial, "6" para Negativo, localizado no canto superior após o campo encontrado; deixar vazio se não encontrado
+- DataCumprimento: data do cumprimento anotada no canto superior ao final (no formato DD/MM); deixar vazio se não encontrado
+- HoraCumprimento: horário do cumprimento anotado no canto superior ao final (no formato HH:MM); deixar vazio se não encontrado
+- Whatsapp: número de WhatsApp preenchido manualmente caso haja anotação adicional/papelzinho; deixar vazio se não encontrado
+- CPF: CPF preenchido manualmente caso haja anotação adicional/papelzinho; deixar vazio se não encontrado
+- Email: e-mail preenchido manualmente caso haja anotação adicional/papelzinho; deixar vazio se não encontrado
 
 Retorne exatamente este JSON:
-{"Mandado":"","NumeroProcesso":"","Nome":"","Documento":"","Sexo":"","Posicao":"","Endereco":"","Cidade":"","Whatsapp":"","CPF":"","Email":"","DataCarga":"","TipoAto":""}`
+{"Mandado":"","NumeroProcesso":"","Nome":"","Documento":"","Sexo":"","Posicao":"","Endereco":"","Cidade":"","DataCarga":"","TipoAto":"","Encontrado":"","Resultado":"","DataCumprimento":"","HoraCumprimento":"","Whatsapp":"","CPF":"","Email":""}`
 
 const promptLote = `Este PDF contém múltiplas folhas de rosto de mandados judiciais brasileiros. Para CADA página que contiver uma folha de rosto, extraia os dados e retorne SOMENTE um array JSON válido, sem texto adicional, sem blocos de código markdown.
 
+No canto superior de cada folha (margem ou cabeçalho superior), há anotações manuais organizadas em sequência ordenada da esquerda para a direita:
+1. Data da Carga: data em que o mandado foi recebido/carregado (no formato DD/MM).
+2. Tipo do Ato: localizado logo após a data da carga. IMPORTANTE: este campo conterá APENAS NÚMEROS que representam o(s) código(s) do tipo de ato (por exemplo: "1", "2", ou múltiplos atos como "1 e 2", "1, 2", "1/2"). NUNCA virá escrito por extenso como "Citação" nem "1 - Citação", virá APENAS o(s) número(s) do código. Extraia exatamente o(s) número(s) anotado(s).
+3. Encontrado: se a pessoa/destinatário foi encontrado(a). Retorne "2" para Sim/Encontrado ou "3" para Não/Não Encontrado.
+4. Resultado: o resultado do cumprimento da diligência. Retorne o código numérico: "4" para Positivo, "5" para Parcial, "6" para Negativo.
+5. Data e Hora do Cumprimento: data (formato DD/MM) e horário (formato HH:MM) em que o ato foi cumprido.
+
 Campos por mandado:
-- Mandado: número do mandado
+- Mandado: número do mandado judicial impresso
 - NumeroProcesso: número do processo judicial de origem (ex: "1234567-89.2024.8.26.0100"); deixar vazio se não encontrado
 - Nome: nome completo do destinatário
 - Documento: CPF, CNPJ ou RG (somente dígitos, sem pontuação, priorizar CPF caso haja mais de um)
@@ -148,14 +166,18 @@ Campos por mandado:
 - Posicao: papel processual (ex: "Requerido", "Réu", "Executado")
 - Endereco: endereço completo, não incluir o CEP do endereço
 - Cidade: nome da cidade
-- Whatsapp: número de WhatsApp preenchido manualmente no papelzinho colado no documento; deixar vazio se não encontrado
-- CPF: CPF preenchido manualmente no papelzinho colado no documento (extrair exatamente como escrito, com ou sem pontuação); deixar vazio se não encontrado
-- Email: e-mail preenchido manualmente no papelzinho colado no documento; deixar vazio se não encontrado
-- DataCarga: data da carga localizada no lado esquerdo da folha (no formato DD/MM); deixar vazio se não encontrado
-- TipoAto: tipo de ato localizado no centro da folha; deixar vazio se não encontrado
+- DataCarga: data da carga localizada no canto superior à esquerda (no formato DD/MM); deixar vazio se não encontrado
+- TipoAto: apenas o(s) número(s) do código do ato anotado no canto superior após a data da carga (ex: "1", "2", ou múltiplos como "1, 2" ou "1 e 2"); extrair apenas os dígitos/números dos códigos; deixar vazio se não encontrado
+- Encontrado: "2" para sim, "3" para não, localizado no canto superior após o tipo do ato; deixar vazio se não encontrado
+- Resultado: "4" para Positivo, "5" para Parcial, "6" para Negativo, localizado no canto superior após o campo encontrado; deixar vazio se não encontrado
+- DataCumprimento: data do cumprimento anotada no canto superior ao final (no formato DD/MM); deixar vazio se não encontrado
+- HoraCumprimento: horário do cumprimento anotado no canto superior ao final (no formato HH:MM); deixar vazio se não encontrado
+- Whatsapp: número de WhatsApp preenchido manualmente caso haja anotação adicional/papelzinho; deixar vazio se não encontrado
+- CPF: CPF preenchido manualmente caso haja anotação adicional/papelzinho; deixar vazio se não encontrado
+- Email: e-mail preenchido manualmente caso haja anotação adicional/papelzinho; deixar vazio se não encontrado
 
 Retorne exatamente este array JSON:
-[{"Mandado":"","NumeroProcesso":"","Nome":"","Documento":"","Sexo":"","Posicao":"","Endereco":"","Cidade":"","Whatsapp":"","CPF":"","Email":"","DataCarga":"","TipoAto":""}]`
+[{"Mandado":"","NumeroProcesso":"","Nome":"","Documento":"","Sexo":"","Posicao":"","Endereco":"","Cidade":"","DataCarga":"","TipoAto":"","Encontrado":"","Resultado":"","DataCumprimento":"","HoraCumprimento":"","Whatsapp":"","CPF":"","Email":""}]`
 
 func detectMime(data []byte) string {
 	if len(data) >= 4 && string(data[:4]) == "%PDF" {
@@ -225,9 +247,60 @@ func inferirTipoDocumento(doc string) string {
 	}
 }
 
+func extrairCodigosTipoAto(s string) string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return ""
+	}
+	var codigos []string
+	var current strings.Builder
+	for _, r := range s {
+		if unicode.IsDigit(r) {
+			current.WriteRune(r)
+		} else {
+			if current.Len() > 0 {
+				codigos = append(codigos, current.String())
+				current.Reset()
+			}
+		}
+	}
+	if current.Len() > 0 {
+		codigos = append(codigos, current.String())
+	}
+	if len(codigos) > 0 {
+		return strings.Join(codigos, ", ")
+	}
+	return s
+}
+
 func normalizarExtraido(m *dto.MandadoExtraido) {
 	m.Nome = toTitleCase(m.Nome)
 	m.Mandado = extrairNumeroMandado(m.Mandado)
+	m.DataCarga = strings.TrimSpace(m.DataCarga)
+	m.TipoAto = extrairCodigosTipoAto(m.TipoAto)
+	m.DataCumprimento = strings.TrimSpace(m.DataCumprimento)
+	m.HoraCumprimento = strings.TrimSpace(m.HoraCumprimento)
+
+	enc := strings.ToLower(strings.TrimSpace(m.Encontrado))
+	if strings.Contains(enc, "2") || strings.Contains(enc, "sim") {
+		m.Encontrado = "2"
+	} else if strings.Contains(enc, "3") || strings.Contains(enc, "nao") || strings.Contains(enc, "não") {
+		m.Encontrado = "3"
+	} else {
+		m.Encontrado = enc
+	}
+
+	res := strings.ToLower(strings.TrimSpace(m.Resultado))
+	if strings.Contains(res, "4") || strings.Contains(res, "pos") {
+		m.Resultado = "4"
+	} else if strings.Contains(res, "5") || strings.Contains(res, "parc") {
+		m.Resultado = "5"
+	} else if strings.Contains(res, "6") || strings.Contains(res, "neg") {
+		m.Resultado = "6"
+	} else {
+		m.Resultado = res
+	}
+
 	if m.CPF != "" {
 		digitsCPF := strings.Map(func(r rune) rune {
 			if r >= '0' && r <= '9' {

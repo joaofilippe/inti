@@ -70,8 +70,8 @@ services:
 
   frontend:
     build:
-      context: ../../angular/inti-front
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile-front
       args:
         - GITHUB_TOKEN=${GITHUB_TOKEN}
     container_name: inti-frontend
