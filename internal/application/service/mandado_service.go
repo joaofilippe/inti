@@ -207,14 +207,17 @@ func (s *MandadoService) BuildReplaces(m entities.Mandado) map[string]string {
 		"{{ENDEREÇO}}":    m.Endereco,
 		"{{NOME}}":        nomeText,
 		"{{POSICAO}}":     positionText,
-		"{{CPF}}":         documentoFormatado(m.TipoDocumento, m.Documento),
+		"{{CPF}}":         documentoFormatado(m.Documento),
+		"{{DOCUMENTO}}":   documentoFormatado(m.Documento),
 		"{{CONTATO}}":     contatoStr,
 		"{{OBS}}":         drStr + obsStr,
 	}
 
 	if m.IsPJ {
 		replaces["{{NOME}}"] = fmt.Sprintf("%s, na pessoa de seu representante legal %s", m.Nome, m.RepresentanteNome)
-		replaces["{{CPF}}"] = fmt.Sprintf("%s CPF %s", m.Documento, m.RepresentanteDoc)
+		pjDoc := fmt.Sprintf("%s CPF %s", documentoFormatado(m.Documento), documentoFormatado(m.RepresentanteDoc))
+		replaces["{{CPF}}"] = pjDoc
+		replaces["{{DOCUMENTO}}"] = pjDoc
 	}
 
 	return replaces
@@ -265,37 +268,13 @@ var palavrasMinusculas = map[string]bool{
 	"e": true,
 }
 
-func documentoFormatado(tipo, numero string) string {
-	digits := strings.Map(func(r rune) rune {
-		if r >= '0' && r <= '9' {
-			return r
+func documentoFormatado(numero string) string {
+	return strings.Map(func(r rune) rune {
+		if (r >= '0' && r <= '9') || (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z') {
+			return unicode.ToUpper(r)
 		}
 		return -1
 	}, numero)
-
-	var formatted string
-	switch {
-	case len(digits) == 11: // CPF: 123.456.789-01
-		formatted = digits[:3] + "." + digits[3:6] + "." + digits[6:9] + "-" + digits[9:]
-	case len(digits) == 14: // CNPJ: 12.345.678/0001-90
-		formatted = digits[:2] + "." + digits[2:5] + "." + digits[5:8] + "/" + digits[8:12] + "-" + digits[12:]
-	case len(digits) >= 7 && len(digits) <= 9: // RG
-		switch len(digits) {
-		case 9: // 12.345.678-9 (com dígito verificador)
-			formatted = digits[:2] + "." + digits[2:5] + "." + digits[5:8] + "-" + digits[8:]
-		case 8: // 12.345.678 (sem dígito verificador)
-			formatted = digits[:2] + "." + digits[2:5] + "." + digits[5:8]
-		case 7: // 1.234.456 (RG antigo)
-			formatted = digits[:1] + "." + digits[1:4] + "." + digits[4:7]
-		}
-	default:
-		formatted = numero
-	}
-
-	if tipo == "" {
-		return formatted
-	}
-	return tipo + " " + formatted
 }
 
 func normalizarMaiusculas(s string) string {

@@ -112,6 +112,57 @@ func TestNormalizarExtraido_NovosCampos(t *testing.T) {
 			expectedDataCum: "09/06",
 			expectedHoraCum: "11:00",
 		},
+		{
+			name: "Sequência de códigos agrupados '2 - 2 - 4'",
+			input: dto.MandadoExtraido{
+				Nome:            "TESTE ATO UNICO",
+				Mandado:         "205.2026/000516-3",
+				DataCarga:       "10/06",
+				TipoAto:         "2 - 2 - 4",
+				DataCumprimento: "11/06",
+				HoraCumprimento: "15:30",
+			},
+			expectedEnc:     "2",
+			expectedRes:     "4",
+			expectedDataC:   "10/06",
+			expectedTipoAto: "2",
+			expectedDataCum: "11/06",
+			expectedHoraCum: "15:30",
+		},
+		{
+			name: "Sequência com múltiplos atos '2 e 4 - 2 - 4'",
+			input: dto.MandadoExtraido{
+				Nome:            "TESTE MULTIPLOS ATOS",
+				Mandado:         "205.2026/000517-1",
+				DataCarga:       "12/06",
+				TipoAto:         "2 e 4 - 2 - 4",
+				DataCumprimento: "13/06",
+				HoraCumprimento: "10:00",
+			},
+			expectedEnc:     "2",
+			expectedRes:     "4",
+			expectedDataC:   "12/06",
+			expectedTipoAto: "2, 4",
+			expectedDataCum: "13/06",
+			expectedHoraCum: "10:00",
+		},
+		{
+			name: "Sequência negativa '1 - 3 - 6'",
+			input: dto.MandadoExtraido{
+				Nome:            "TESTE NEGATIVO",
+				Mandado:         "205.2026/000518-0",
+				DataCarga:       "14/06",
+				TipoAto:         "1 - 3 - 6",
+				DataCumprimento: "15/06",
+				HoraCumprimento: "14:00",
+			},
+			expectedEnc:     "3",
+			expectedRes:     "6",
+			expectedDataC:   "14/06",
+			expectedTipoAto: "1",
+			expectedDataCum: "15/06",
+			expectedHoraCum: "14:00",
+		},
 	}
 
 	for _, tt := range tests {
@@ -139,4 +190,15 @@ func TestNormalizarExtraido_NovosCampos(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("Normalização de Diligencias", func(t *testing.T) {
+		m := dto.MandadoExtraido{
+			Nome:        "TESTE DILIGENCIAS",
+			Diligencias: " 15/05 14:30 ",
+		}
+		normalizarExtraido(&m)
+		if m.Diligencias != "15/05 14:30" {
+			t.Errorf("Diligencias: esperado %q, obtido %q", "15/05 14:30", m.Diligencias)
+		}
+	})
 }

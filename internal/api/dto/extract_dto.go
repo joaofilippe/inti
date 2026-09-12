@@ -20,4 +20,5 @@ type MandadoExtraido struct {
 	Resultado       string `json:"Resultado"`
 	DataCumprimento string `json:"DataCumprimento"`
 	HoraCumprimento string `json:"HoraCumprimento"`
+	Diligencias     string `json:"Diligencias"`
 }

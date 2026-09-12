@@ -119,12 +119,32 @@ const geminiModel = "gemini-2.5-flash"
 
 const promptSingle = `Esta é a folha de rosto de um mandado judicial brasileiro. Extraia os dados e retorne SOMENTE JSON válido, sem texto adicional, sem blocos de código markdown.
 
-No canto superior da folha (margem ou cabeçalho superior), há anotações manuais organizadas em sequência ordenada da esquerda para a direita:
+No canto superior da folha (margem ou cabeçalho superior), há anotações manuais organizadas em sequência da esquerda para a direita:
 1. Data da Carga: data em que o mandado foi recebido/carregado (no formato DD/MM).
-2. Tipo do Ato: localizado logo após a data da carga. IMPORTANTE: este campo conterá APENAS NÚMEROS que representam o(s) código(s) do tipo de ato (por exemplo: "1", "2", ou múltiplos atos como "1 e 2", "1, 2", "1/2"). NUNCA virá escrito por extenso como "Citação" nem "1 - Citação", virá APENAS o(s) número(s) do código. Extraia exatamente o(s) número(s) anotado(s).
-3. Encontrado: se a pessoa/destinatário foi encontrado(a). Retorne "2" para Sim/Encontrado ou "3" para Não/Não Encontrado.
-4. Resultado: o resultado do cumprimento da diligência. Retorne o código numérico: "4" para Positivo, "5" para Parcial, "6" para Negativo.
-5. Data e Hora do Cumprimento: data (formato DD/MM) e horário (formato HH:MM) em que o ato foi cumprido.
+2. Sequência de códigos SEPARADOS POR HÍFEN: [Tipo do Ato] - [Encontrado] - [Resultado]
+   MUITO IMPORTANTE: Os números anotados após a data da carga são separados por hífens (" - ") e representam TRÊS CAMPOS DISTINTOS:
+   - Primeiro campo (antes do primeiro hífen): Código do Tipo do Ato (ex: "1", "2"). Quando houver MAIS DE UM tipo de ato, eles virão agrupados com a letra "e" (por exemplo: "2 e 4", "1 e 2"). NUNCA inclua os números após o primeiro hífen aqui!
+   - Segundo campo (entre os hífens): Encontrado ("2" para Sim/Encontrado, "3" para Não/Não Encontrado).
+   - Terceiro campo (após o segundo hífen): Resultado ("4" para Positivo, "5" para Parcial, "6" para Negativo).
+
+   EXEMPLOS CRÍTICOS:
+   - Se estiver anotado "2 - 2 - 4":
+     TipoAto: "2" (Intimação) -> NUNCA coloque "2 - 2 - 4" no TipoAto! Apenas o primeiro "2" é o Tipo do Ato.
+     Encontrado: "2" (Sim)
+     Resultado: "4" (Positivo)
+   - Se estiver anotado "2 e 4 - 2 - 4":
+     TipoAto: "2 e 4" (Intimação e Penhora)
+     Encontrado: "2" (Sim)
+     Resultado: "4" (Positivo)
+   - Se estiver anotado "1 - 3 - 6":
+     TipoAto: "1" (Citação)
+     Encontrado: "3" (Não)
+     Resultado: "6" (Negativo)
+
+3. Data e Hora do Cumprimento: data (formato DD/MM) e horário (formato HH:MM) em que o ato foi cumprido, localizada ao final da linha.
+
+No lado esquerdo inferior da folha (margem ou rodapé inferior esquerdo), há anotações manuais de diligências:
+- Diligências: data e hora da(s) diligência(s) realizada(s), no formato DD/MM HH:mm em texto (ex: "15/05 14:30"). Caso haja mais de uma diligência anotada, separe por vírgula em texto (ex: "15/05 14:30, 16/05 09:15"); se não houver anotação, deixe vazio.
 
 Campos a extrair:
 - Mandado: número do mandado judicial impresso (ex: "205.2026/000511-3")
@@ -136,26 +156,47 @@ Campos a extrair:
 - Endereco: endereço completo (rua, número, bairro)
 - Cidade: nome da cidade
 - DataCarga: data da carga localizada no canto superior à esquerda (no formato DD/MM); deixar vazio se não encontrado
-- TipoAto: apenas o(s) número(s) do código do ato anotado no canto superior após a data da carga (ex: "1", "2", ou múltiplos como "1, 2" ou "1 e 2"); extrair apenas os dígitos/números dos códigos; deixar vazio se não encontrado
-- Encontrado: "2" para sim, "3" para não, localizado no canto superior após o tipo do ato; deixar vazio se não encontrado
-- Resultado: "4" para Positivo, "5" para Parcial, "6" para Negativo, localizado no canto superior após o campo encontrado; deixar vazio se não encontrado
+- TipoAto: apenas o(s) número(s) do código do ato localizado ANTES do primeiro hífen (ex: "2", ou se múltiplos atos "2 e 4"); NUNCA coloque toda a sequência "2 - 2 - 4" aqui; extrair apenas o(s) número(s) do ato; deixar vazio se não encontrado
+- Encontrado: "2" para sim, "3" para não, que é o código numérico localizado ENTRE os hífens da sequência; deixar vazio se não encontrado
+- Resultado: "4" para Positivo, "5" para Parcial, "6" para Negativo, que é o código numérico localizado APÓS o segundo hífen da sequência; deixar vazio se não encontrado
 - DataCumprimento: data do cumprimento anotada no canto superior ao final (no formato DD/MM); deixar vazio se não encontrado
 - HoraCumprimento: horário do cumprimento anotado no canto superior ao final (no formato HH:MM); deixar vazio se não encontrado
+- Diligencias: anotação manual de diligência(s) no lado esquerdo inferior da folha, com data e hora no formato DD/MM HH:mm em texto (ex: "15/05 14:30"); deixar vazio se não encontrado
 - Whatsapp: número de WhatsApp preenchido manualmente caso haja anotação adicional/papelzinho; deixar vazio se não encontrado
 - CPF: CPF preenchido manualmente caso haja anotação adicional/papelzinho; deixar vazio se não encontrado
 - Email: e-mail preenchido manualmente caso haja anotação adicional/papelzinho; deixar vazio se não encontrado
 
 Retorne exatamente este JSON:
-{"Mandado":"","NumeroProcesso":"","Nome":"","Documento":"","Sexo":"","Posicao":"","Endereco":"","Cidade":"","DataCarga":"","TipoAto":"","Encontrado":"","Resultado":"","DataCumprimento":"","HoraCumprimento":"","Whatsapp":"","CPF":"","Email":""}`
+{"Mandado":"","NumeroProcesso":"","Nome":"","Documento":"","Sexo":"","Posicao":"","Endereco":"","Cidade":"","DataCarga":"","TipoAto":"","Encontrado":"","Resultado":"","DataCumprimento":"","HoraCumprimento":"","Diligencias":"","Whatsapp":"","CPF":"","Email":""}`
 
 const promptLote = `Este PDF contém múltiplas folhas de rosto de mandados judiciais brasileiros. Para CADA página que contiver uma folha de rosto, extraia os dados e retorne SOMENTE um array JSON válido, sem texto adicional, sem blocos de código markdown.
 
-No canto superior de cada folha (margem ou cabeçalho superior), há anotações manuais organizadas em sequência ordenada da esquerda para a direita:
+No canto superior de cada folha (margem ou cabeçalho superior), há anotações manuais organizadas em sequência da esquerda para a direita:
 1. Data da Carga: data em que o mandado foi recebido/carregado (no formato DD/MM).
-2. Tipo do Ato: localizado logo após a data da carga. IMPORTANTE: este campo conterá APENAS NÚMEROS que representam o(s) código(s) do tipo de ato (por exemplo: "1", "2", ou múltiplos atos como "1 e 2", "1, 2", "1/2"). NUNCA virá escrito por extenso como "Citação" nem "1 - Citação", virá APENAS o(s) número(s) do código. Extraia exatamente o(s) número(s) anotado(s).
-3. Encontrado: se a pessoa/destinatário foi encontrado(a). Retorne "2" para Sim/Encontrado ou "3" para Não/Não Encontrado.
-4. Resultado: o resultado do cumprimento da diligência. Retorne o código numérico: "4" para Positivo, "5" para Parcial, "6" para Negativo.
-5. Data e Hora do Cumprimento: data (formato DD/MM) e horário (formato HH:MM) em que o ato foi cumprido.
+2. Sequência de códigos SEPARADOS POR HÍFEN: [Tipo do Ato] - [Encontrado] - [Resultado]
+   MUITO IMPORTANTE: Os números anotados após a data da carga são separados por hífens (" - ") e representam TRÊS CAMPOS DISTINTOS:
+   - Primeiro campo (antes do primeiro hífen): Código do Tipo do Ato (ex: "1", "2"). Quando houver MAIS DE UM tipo de ato, eles virão agrupados com a letra "e" (por exemplo: "2 e 4", "1 e 2"). NUNCA inclua os números após o primeiro hífen aqui!
+   - Segundo campo (entre os hífens): Encontrado ("2" para Sim/Encontrado, "3" para Não/Não Encontrado).
+   - Terceiro campo (após o segundo hífen): Resultado ("4" para Positivo, "5" para Parcial, "6" para Negativo).
+
+   EXEMPLOS CRÍTICOS:
+   - Se estiver anotado "2 - 2 - 4":
+     TipoAto: "2" (Intimação) -> NUNCA coloque "2 - 2 - 4" no TipoAto! Apenas o primeiro "2" é o Tipo do Ato.
+     Encontrado: "2" (Sim)
+     Resultado: "4" (Positivo)
+   - Se estiver anotado "2 e 4 - 2 - 4":
+     TipoAto: "2 e 4" (Intimação e Penhora)
+     Encontrado: "2" (Sim)
+     Resultado: "4" (Positivo)
+   - Se estiver anotado "1 - 3 - 6":
+     TipoAto: "1" (Citação)
+     Encontrado: "3" (Não)
+     Resultado: "6" (Negativo)
+
+3. Data e Hora do Cumprimento: data (formato DD/MM) e horário (formato HH:MM) em que o ato foi cumprido, localizada ao final da linha.
+
+No lado esquerdo inferior da folha (margem ou rodapé inferior esquerdo), há anotações manuais de diligências:
+- Diligências: anotações manuais contendo data e hora da(s) diligência(s), no formato DD/MM HH:mm em texto (ex: "15/05 14:30"). Caso haja mais de uma diligência anotada, separe por vírgula em texto (ex: "15/05 14:30, 16/05 09:15"); se não houver anotação, deixe vazio.
 
 Campos por mandado:
 - Mandado: número do mandado judicial impresso
@@ -167,17 +208,18 @@ Campos por mandado:
 - Endereco: endereço completo, não incluir o CEP do endereço
 - Cidade: nome da cidade
 - DataCarga: data da carga localizada no canto superior à esquerda (no formato DD/MM); deixar vazio se não encontrado
-- TipoAto: apenas o(s) número(s) do código do ato anotado no canto superior após a data da carga (ex: "1", "2", ou múltiplos como "1, 2" ou "1 e 2"); extrair apenas os dígitos/números dos códigos; deixar vazio se não encontrado
-- Encontrado: "2" para sim, "3" para não, localizado no canto superior após o tipo do ato; deixar vazio se não encontrado
-- Resultado: "4" para Positivo, "5" para Parcial, "6" para Negativo, localizado no canto superior após o campo encontrado; deixar vazio se não encontrado
+- TipoAto: apenas o(s) número(s) do código do ato localizado ANTES do primeiro hífen (ex: "2", ou se múltiplos atos "2 e 4"); NUNCA coloque toda a sequência "2 - 2 - 4" aqui; extrair apenas o(s) número(s) do ato; deixar vazio se não encontrado
+- Encontrado: "2" para sim, "3" para não, que é o código numérico localizado ENTRE os hífens da sequência; deixar vazio se não encontrado
+- Resultado: "4" para Positivo, "5" para Parcial, "6" para Negativo, que é o código numérico localizado APÓS o segundo hífen da sequência; deixar vazio se não encontrado
 - DataCumprimento: data do cumprimento anotada no canto superior ao final (no formato DD/MM); deixar vazio se não encontrado
 - HoraCumprimento: horário do cumprimento anotado no canto superior ao final (no formato HH:MM); deixar vazio se não encontrado
+- Diligencias: anotação manual de diligência(s) no lado esquerdo inferior da folha, com data e hora no formato DD/MM HH:mm em texto (ex: "15/05 14:30"); deixar vazio se não encontrado
 - Whatsapp: número de WhatsApp preenchido manualmente caso haja anotação adicional/papelzinho; deixar vazio se não encontrado
 - CPF: CPF preenchido manualmente caso haja anotação adicional/papelzinho; deixar vazio se não encontrado
 - Email: e-mail preenchido manualmente caso haja anotação adicional/papelzinho; deixar vazio se não encontrado
 
 Retorne exatamente este array JSON:
-[{"Mandado":"","NumeroProcesso":"","Nome":"","Documento":"","Sexo":"","Posicao":"","Endereco":"","Cidade":"","DataCarga":"","TipoAto":"","Encontrado":"","Resultado":"","DataCumprimento":"","HoraCumprimento":"","Whatsapp":"","CPF":"","Email":""}]`
+[{"Mandado":"","NumeroProcesso":"","Nome":"","Documento":"","Sexo":"","Posicao":"","Endereco":"","Cidade":"","DataCarga":"","TipoAto":"","Encontrado":"","Resultado":"","DataCumprimento":"","HoraCumprimento":"","Diligencias":"","Whatsapp":"","CPF":"","Email":""}]`
 
 func detectMime(data []byte) string {
 	if len(data) >= 4 && string(data[:4]) == "%PDF" {
@@ -273,13 +315,38 @@ func extrairCodigosTipoAto(s string) string {
 	return s
 }
 
+func separarCodigosAnotados(m *dto.MandadoExtraido) {
+	m.TipoAto = strings.TrimSpace(m.TipoAto)
+	m.Encontrado = strings.TrimSpace(m.Encontrado)
+	m.Resultado = strings.TrimSpace(m.Resultado)
+
+	if strings.Contains(m.TipoAto, "-") {
+		parts := strings.Split(m.TipoAto, "-")
+		for i := range parts {
+			parts[i] = strings.TrimSpace(parts[i])
+		}
+		if len(parts) >= 3 {
+			last := parts[len(parts)-1]
+			penult := parts[len(parts)-2]
+			if (penult == "2" || penult == "3") && (last == "4" || last == "5" || last == "6") {
+				m.TipoAto = strings.Join(parts[:len(parts)-2], "-")
+				m.Encontrado = penult
+				m.Resultado = last
+			}
+		}
+	}
+}
+
 func normalizarExtraido(m *dto.MandadoExtraido) {
+	separarCodigosAnotados(m)
+
 	m.Nome = toTitleCase(m.Nome)
 	m.Mandado = extrairNumeroMandado(m.Mandado)
 	m.DataCarga = strings.TrimSpace(m.DataCarga)
 	m.TipoAto = extrairCodigosTipoAto(m.TipoAto)
 	m.DataCumprimento = strings.TrimSpace(m.DataCumprimento)
 	m.HoraCumprimento = strings.TrimSpace(m.HoraCumprimento)
+	m.Diligencias = strings.TrimSpace(m.Diligencias)
 
 	enc := strings.ToLower(strings.TrimSpace(m.Encontrado))
 	if strings.Contains(enc, "2") || strings.Contains(enc, "sim") {

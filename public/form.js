@@ -55,6 +55,35 @@ function preencherCamposAnotacoes(data) {
       });
     }
   }
+  if (data.Diligencias) {
+    const dilContainer = document.getElementById("diligencias-container");
+    const btnAddDil = document.getElementById("btn-add-dil");
+    if (dilContainer) {
+      const parts = data.Diligencias.split(",").map((s) => s.trim()).filter(Boolean);
+      const rows = dilContainer.querySelectorAll(".diligencia-row");
+      for (let i = 1; i < rows.length; i++) {
+        rows[i].remove();
+      }
+      parts.forEach((item, idx) => {
+        if (idx > 0 && btnAddDil) {
+          btnAddDil.click();
+        }
+        const allRows = dilContainer.querySelectorAll(".diligencia-row");
+        const targetRow = allRows[idx];
+        if (targetRow) {
+          const match = item.match(/^(\d{1,2}\/\d{1,2})(?:\s+(\d{1,2}[:hH]\d{2}))?/);
+          const dataEl = targetRow.querySelector(".dil-data");
+          const horaEl = targetRow.querySelector(".dil-hora");
+          if (match) {
+            if (dataEl) dataEl.value = match[1];
+            if (horaEl && match[2]) horaEl.value = match[2].replace(/[hH]/, ":");
+          } else {
+            if (dataEl) dataEl.value = item;
+          }
+        }
+      });
+    }
+  }
 }
 
 function preencherFormComLote(m) {
